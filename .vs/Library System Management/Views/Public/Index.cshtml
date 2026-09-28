@@ -1,0 +1,94 @@
+@model IEnumerable<Library_System_Management.Models.Item>
+
+@{
+    ViewData["Title"] = "Search";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-3">Find items in the catalog</h2>
+    </div>
+
+    <div class="col-lg-3 mb-3">
+        <div class="filter-panel p-3">
+            <form method="get">
+                <label class="form-label small text-muted">Search</label>
+                <div class="mb-2">
+                    <div class="input-group search-bar">
+                        <input class="form-control" name="q" placeholder="Search title, code or description" value="@ViewContext.HttpContext.Request.Query["q"]" />
+                        <button class="btn">Search</button>
+                    </div>
+                </div>
+
+                <label class="form-label small text-muted">Type</label>
+                <select name="type" class="form-select mb-3">
+                    @{ 
+                        var qtype = (string?)ViewContext.HttpContext.Request.Query["type"] ?? "all";
+                        var typeOptions = "";
+                        typeOptions += "<option value=\"all\"" + (string.Equals(qtype, "all", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(qtype) ? " selected=\"selected\"" : "") + ">All types</option>";
+                        typeOptions += "<option value=\"book\"" + (string.Equals(qtype, "book", StringComparison.OrdinalIgnoreCase) ? " selected=\"selected\"" : "") + ">Books</option>";
+                        typeOptions += "<option value=\"music\"" + (string.Equals(qtype, "music", StringComparison.OrdinalIgnoreCase) ? " selected=\"selected\"" : "") + ">Music</option>";
+                        typeOptions += "<option value=\"toy\"" + (string.Equals(qtype, "toy", StringComparison.OrdinalIgnoreCase) ? " selected=\"selected\"" : "") + ">Toys</option>";
+                    }
+                    @Html.Raw(typeOptions)
+                </select>
+
+                <label class="form-label small text-muted">Status</label>
+                <select name="status" class="form-select mb-3">
+                    @{ 
+                        var qstatus = (string?)ViewContext.HttpContext.Request.Query["status"] ?? "all";
+                        var statusOptions = "";
+                        statusOptions += "<option value=\"all\"" + (string.IsNullOrEmpty(qstatus) || string.Equals(qstatus, "all", StringComparison.OrdinalIgnoreCase) ? " selected=\"selected\"" : "") + ">Any status</option>";
+                        var values = Enum.GetValues(typeof(Library_System_Management.Models.ItemStatus));
+                        foreach(var s in values)
+                        {
+                            var sval = s.ToString();
+                            statusOptions += "<option value=\"" + sval + "\"" + (string.Equals((string?)ViewContext.HttpContext.Request.Query["status"], sval, StringComparison.OrdinalIgnoreCase) ? " selected=\"selected\"" : "") + ">" + sval + "</option>";
+                        }
+                    }
+                    @Html.Raw(statusOptions)
+                </select>
+
+                <div class="d-grid">
+                    <button class="btn btn-outline-primary">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-9">
+        <div class="mb-2 d-flex justify-content-between align-items-center">
+            <div><small class="text-muted">@Model?.Count() ?? 0 items</small></div>
+            <div>
+                <a class="btn btn-sm btn-outline-secondary" asp-controller="Public" asp-action="Index">Clear</a>
+            </div>
+        </div>
+
+        <div class="search-results row">
+            @foreach(var item in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card result-card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1">@item.Name</h5>
+                                    <small class="text-muted">@item.LibraryCode</small>
+                                </div>
+                                <span class="badge bg-light text-primary">@item.GetType().Name</span>
+                            </div>
+                            <p class="card-text text-muted mt-2">@item.Description</p>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <small class="text-muted">@item.Status</small>
+                                <div>
+                                    <a class="btn btn-sm btn-outline-secondary me-1" asp-action="Details" asp-route-id="@item.Id">Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

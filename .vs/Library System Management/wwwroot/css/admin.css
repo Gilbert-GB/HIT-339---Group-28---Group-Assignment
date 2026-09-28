@@ -1,0 +1,46 @@
+/* Admin specific styles - cleaner, semantic layout */
+:root{
+  --admin-bg: #ffffff;
+  --admin-accent: #0b5ed7;
+  --admin-muted: #6b7280;
+}
+
+.admin-main{
+  padding: 2.5rem 0;
+}
+.admin-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  margin-bottom:1rem;
+}
+.admin-title{
+  font-size:1.5rem;
+  font-weight:700;
+  color:var(--admin-accent);
+}
+
+.admin-actions a{margin-left:.5rem}
+
+.admin-card{
+  background:var(--admin-bg);
+  border-radius:.5rem;
+  box-shadow:0 4px 16px rgba(15,23,42,0.06);
+  padding:1rem;
+}
+
+.admin-form-row{display:flex;gap:1rem;flex-wrap:wrap}
+.admin-form-col{flex:1;min-width:220px}
+
+.type-specific{display:none}
+.type-specific.active{display:block}
+
+.admin-table th{font-weight:600;color:#0f1724}
+
+.admin-compact .btn{padding:.35rem .6rem;font-size:.875rem}
+
+/* responsive tweaks */
+@media (max-width:767px){
+  .admin-header{flex-direction:column;align-items:flex-start}
+}
