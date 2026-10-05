@@ -3,7 +3,7 @@ using Library_System_Management.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
-// AdminController.cs
+// AdminController.cs ()
 // Controller for administrative functions: managing library catalog items (create, edit, delete).
 // All actions are restricted to users in the "Admin" role via the Authorize attribute.
 namespace Library_System_Management.Controllers
