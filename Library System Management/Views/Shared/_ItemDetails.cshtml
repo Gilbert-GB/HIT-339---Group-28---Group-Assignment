@@ -1,0 +1,54 @@
+@using Library_System_Management.Models
+@model Item
+
+<div class="item-details">
+    <dl class="row">
+        <dt class="col-sm-3">Library Code</dt>
+        <dd class="col-sm-9">@Model.LibraryCode</dd>
+
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Model.Name</dd>
+
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Model.Description</dd>
+
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">@Model.Status</dd>
+    </dl>
+
+    @* Type-specific details *@
+    @if (Model is Book b)
+    {
+        <h5>Book details</h5>
+        <dl class="row">
+            <dt class="col-sm-3">Author</dt>
+            <dd class="col-sm-9">@b.Author</dd>
+            <dt class="col-sm-3">Genre</dt>
+            <dd class="col-sm-9">@b.Genre</dd>
+            <dt class="col-sm-3">Pages</dt>
+            <dd class="col-sm-9">@b.Pages</dd>
+        </dl>
+    }
+    else if (Model is Music m)
+    {
+        <h5>Music details</h5>
+        <dl class="row">
+            <dt class="col-sm-3">Artist</dt>
+            <dd class="col-sm-9">@m.Artist</dd>
+            <dt class="col-sm-3">Year</dt>
+            <dd class="col-sm-9">@m.Year</dd>
+            <dt class="col-sm-3">Format</dt>
+            <dd class="col-sm-9">@m.Format</dd>
+        </dl>
+    }
+    else if (Model is Toy t)
+    {
+        <h5>Toy details</h5>
+        <dl class="row">
+            <dt class="col-sm-3">Toy type</dt>
+            <dd class="col-sm-9">@t.ToyType</dd>
+            <dt class="col-sm-3">Recommended age</dt>
+            <dd class="col-sm-9">@t.RecommendedAge</dd>
+        </dl>
+    }
+</div>

@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Borrow Item";
+}
+
+<h2>Borrow Item</h2>
+
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">Library Code</label>
+        <input name="code" class="form-control" />
+    </div>
+    <h4>Borrower Details</h4>
+    <div class="mb-3">
+        <label class="form-label">Username (optional)</label>
+        <input name="borrower.Username" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Full Name</label>
+        <input name="borrower.FullName" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input name="borrower.Email" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Phone</label>
+        <input name="borrower.Phone" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Days to borrow</label>
+        <input name="days" type="number" value="14" class="form-control" />
+    </div>
+
+    <button class="btn btn-primary">Borrow</button>
+    <a class="btn btn-secondary" asp-action="Index">Cancel</a>
+</form>

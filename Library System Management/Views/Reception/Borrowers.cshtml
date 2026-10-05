@@ -1,0 +1,35 @@
+@model IEnumerable<Library_System_Management.Models.Borrower>
+
+@{
+    ViewData["Title"] = "Borrowers";
+}
+
+<h2>Borrowers</h2>
+
+<a class="btn btn-primary mb-3" asp-action="CreateBorrower">Create Borrower</a>
+
+<table class="table table-small">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach(var b in Model)
+    {
+        <tr>
+            <td>@(string.IsNullOrWhiteSpace(b.Username) ? "-" : b.Username)</td>
+            <td>@b.FullName</td>
+            <td>@b.Email</td>
+            <td>@b.Phone</td>
+            <td>
+                <a class="btn btn-sm btn-secondary" asp-action="EditBorrower" asp-route-id="@b.Id">Edit</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

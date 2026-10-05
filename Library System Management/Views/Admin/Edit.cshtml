@@ -1,0 +1,38 @@
+@model Library_System_Management.Models.Item
+
+@{
+    ViewData["Title"] = "Edit Item";
+}
+
+<h2>Edit Item</h2>
+
+<form method="post">
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input name="Name" value="@Model.Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Library Code</label>
+        <input name="LibraryCode" value="@Model.LibraryCode" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea name="Description" class="form-control">@Model.Description</textarea>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Status</label>
+        <select name="Status" class="form-select">
+            @{
+                var values = Enum.GetValues(typeof(Library_System_Management.Models.ItemStatus));
+                foreach(var s in values)
+                {
+                    var sel = Model.Status == (Library_System_Management.Models.ItemStatus)s ? " selected\"selected\"" : string.Empty;
+                    @: <option value="@s"@Html.Raw(sel)>@s</option>
+                }
+            }
+        </select>
+    </div>
+    <button class="btn btn-primary">Save</button>
+    <a class="btn btn-secondary" asp-action="Index">Cancel</a>
+</form>
