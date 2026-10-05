@@ -83,6 +83,21 @@ Date: 2026-08-12 (updated)
 
 ---
 
+## Assignment 3 additions (horizontal feature expansion)
+
+- Added multi-branch support: Branch model, assigned seeded items to branches, BranchesController and Views/Branches/Index for branch inventory and transfers.
+- Added Reservation model and public reservation endpoint (PublicController.Reserve). Prevent duplicate reservations and maintain FIFO queue. When an item is returned the next patron is automatically identified and a notification is generated.
+- Added Notification model and a NotificationsController with a staff-facing log view at /Notifications to show simulated email/SMS messages for events (borrowed, reservation available, fines).
+- Integrated notifications into BorrowItem and ReturnItem so borrowing generates a Borrowed notification and returning triggers ReservationAvailable notifications.
+- Added Kiosk module: KioskController and simple touch-friendly views at /Kiosk for in-library self-service (lookup by email/username and checkout items).
+- Added simple read-only API (ApiController) with endpoints for available items, categories, and operating status using an API key via X-Api-Key header.
+- Added CSV importer (ImportController + view) allowing admins to paste CSV content to bulk-create items; in-memory importer validates rows and returns a summary.
+- Added Manager CSV export (ManagerController.ExportCsv) to export item inventory and borrow counts by branch.
+
+All additions are implemented additively and reuse existing repository and controller patterns to avoid breaking Assignment 2 functionality.
+
+---
+
 ## Verification checklist
 
 - Admin: sign in as admin@library.local / P@ssw0rd1!, open Admin → Items, create/edit/delete items.

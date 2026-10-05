@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Import Items";
+}
+
+<div class="container py-4">
+    <h3>Import Items (CSV)</h3>
+    <p>Paste CSV content with header: LibraryCode,Type,Name (additional columns ignored)</p>
+
+    @if (TempData["ImportError"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ImportError"]</div>
+    }
+    @if (TempData["ImportResult"] != null)
+    {
+        <div class="alert alert-success">@TempData["ImportResult"]</div>
+    }
+
+    <form method="post" action="/Import/Upload">
+        <div class="mb-3">
+            <textarea name="csvContent" class="form-control" rows="10" placeholder="LibraryCode,Type,Name\nB100,Book,Example Book"></textarea>
+        </div>
+        <button class="btn btn-primary">Import</button>
+    </form>
+</div>

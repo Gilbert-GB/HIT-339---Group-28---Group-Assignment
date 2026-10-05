@@ -20,5 +20,7 @@ namespace Library_System_Management.Models
 
         // Current status of the item (Available, Borrowed, etc.)
         public ItemStatus Status { get; set; } = ItemStatus.Available;
+        // Optional association to a Branch (for multi-branch inventory)
+        public Guid? BranchId { get; set; }
     }
 }

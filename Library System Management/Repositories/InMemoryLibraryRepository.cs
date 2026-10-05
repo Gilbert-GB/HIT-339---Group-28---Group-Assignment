@@ -11,11 +11,22 @@ namespace Library_System_Management.Repositories
         private readonly ConcurrentDictionary<Guid, Item> _items = new();
         private readonly ConcurrentDictionary<Guid, Borrower> _borrowers = new();
         private readonly ConcurrentDictionary<Guid, BorrowRecord> _records = new();
+        private readonly ConcurrentDictionary<Guid, Branch> _branches = new();
+        private readonly ConcurrentDictionary<Guid, Reservation> _reservations = new();
+        private readonly ConcurrentDictionary<Guid, Notification> _notifications = new();
 
         // InMemoryLibraryRepository: demo implementation that keeps data in memory.
         // It seeds a collection of sample items, borrowers and borrow records to operate without a database.
         public InMemoryLibraryRepository()
         {
+            // seed with a few branches for multi-branch demo
+            var seededBranches = new[] {
+                new Branch{ Name = "Central Library", Address = "1 Main St", Phone = "555-0001" },
+                new Branch{ Name = "East Branch", Address = "200 East Ave", Phone = "555-0002" },
+                new Branch{ Name = "West Branch", Address = "50 West Rd", Phone = "555-0003" }
+            };
+            foreach(var br in seededBranches) { _branches[br.Id] = br; }
+
             // seed with many items, borrowers, and borrow records for demo/testing
             // seed canonical lists and extend them programmatically to reach 30 items each for a richer demo dataset
             var books = new List<Book> {
@@ -95,10 +106,11 @@ namespace Library_System_Management.Repositories
                 });
             }
 
-            // add all items
-            foreach(var b in books) AddItem(b);
-            foreach(var m in music) AddItem(m);
-            foreach(var t in toys) AddItem(t);
+            // add all items and assign them to the Central branch by default
+            var defaultBranchId = seededBranches.First().Id;
+            foreach(var b in books) { b.BranchId = defaultBranchId; AddItem(b); }
+            foreach(var m in music) { m.BranchId = defaultBranchId; AddItem(m); }
+            foreach(var t in toys) { t.BranchId = defaultBranchId; AddItem(t); }
 
             // seed borrowers
             var borrowers = new[] {
@@ -189,6 +201,71 @@ namespace Library_System_Management.Repositories
             _items[item.Id] = item;
         }
 
+        // Branch operations
+        public IEnumerable<Branch> GetAllBranches() => _branches.Values.OrderBy(b => b.Name);
+        public Branch? GetBranch(Guid id) => _branches.TryGetValue(id, out var b) ? b : null;
+        public void AddBranch(Branch b) { _branches[b.Id] = b; }
+
+        // Transfer an item to another branch
+        public bool TransferItem(Guid itemId, Guid toBranchId)
+        {
+            if (!_items.TryGetValue(itemId, out var it)) return false;
+            if (!_branches.ContainsKey(toBranchId)) return false;
+            it.BranchId = toBranchId;
+            UpdateItem(it);
+            return true;
+        }
+
+        // Reservations
+        public IEnumerable<Reservation> GetReservationsForItem(Guid itemId) => _reservations.Values.Where(r => r.ItemId == itemId).OrderBy(r => r.CreatedAt);
+        public void AddReservation(Reservation r)
+        {
+            // Prevent duplicate reservation for same borrower and item
+            var exists = _reservations.Values.Any(x => x.ItemId == r.ItemId && x.BorrowerId == r.BorrowerId && !x.Fulfilled);
+            if (exists) return;
+            _reservations[r.Id] = r;
+        }
+        public IEnumerable<Reservation> GetAllReservations() => _reservations.Values.OrderBy(r => r.CreatedAt);
+
+        // Notifications
+        public IEnumerable<Notification> GetAllNotifications() => _notifications.Values.OrderByDescending(n => n.CreatedAt);
+        public void AddNotification(Notification n) { _notifications[n.Id] = n; }
+
+        // Simple CSV importer: expects CSV with header: LibraryCode,Type,Name,... This implementation is tolerant and counts successes/failures.
+        public (int success, int failed) ImportItemsFromCsv(string csv)
+        {
+            if (string.IsNullOrWhiteSpace(csv)) return (0,0);
+            var lines = csv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            int success = 0, failed = 0;
+            foreach(var line in lines.Skip(1)) // skip header
+            {
+                try
+                {
+                    var parts = line.Split(',');
+                    if (parts.Length < 3) { failed++; continue; }
+                    var code = parts[0].Trim();
+                    var type = parts[1].Trim().ToLowerInvariant();
+                    var name = parts[2].Trim();
+                    Item it = type switch {
+                        "book" => new Book{ LibraryCode = code, Name = name },
+                        "music" => new Music{ LibraryCode = code, Name = name },
+                        "toy" => new Toy{ LibraryCode = code, Name = name },
+                        _ => null
+                    };
+                    if (it == null) { failed++; continue; }
+                    // assign to default branch
+                    it.BranchId = _branches.Values.FirstOrDefault()?.Id;
+                    AddItem(it);
+                    success++;
+                }
+                catch
+                {
+                    failed++;
+                }
+            }
+            return (success, failed);
+        }
+
         public BorrowRecord? BorrowItem(string code, Borrower borrower, int days)
         {
             var item = GetItemByCode(code);
@@ -220,6 +297,17 @@ namespace Library_System_Management.Repositories
                 DueAt = DateTime.UtcNow.AddDays(days)
             };
             _records[rec.Id] = rec;
+
+            // create a simulated notification for the borrower
+            var notif = new Notification
+            {
+                Recipient = string.IsNullOrWhiteSpace(existing.Email) ? existing.FullName : existing.Email,
+                Channel = string.IsNullOrWhiteSpace(existing.Email) ? "SMS" : "Email",
+                Type = "Borrowed",
+                Message = $"You have borrowed '{item.Name}' (Code: {item.LibraryCode}). Due: {rec.DueAt.ToLocalTime():g}",
+                Status = "Sent"
+            };
+            AddNotification(notif);
             return rec;
         }
 
@@ -242,6 +330,19 @@ namespace Library_System_Management.Repositories
                 rec.FinePaid = daysLate * 1.0m;
             }
             _records[rec.Id] = rec;
+
+            // After return, check reservation queue and notify next patron if any
+            var next = _reservations.Values.Where(r => r.ItemId == rec.ItemId && !r.Fulfilled).OrderBy(r => r.CreatedAt).FirstOrDefault();
+            if (next != null)
+            {
+                next.Fulfilled = true;
+                _reservations[next.Id] = next;
+                var borrower = _borrowers.TryGetValue(next.BorrowerId, out var b) ? b : null;
+                var recipient = borrower != null && !string.IsNullOrWhiteSpace(borrower.Email) ? borrower.Email : (borrower?.FullName ?? "Unknown");
+                var channel = borrower != null && !string.IsNullOrWhiteSpace(borrower.Email) ? "Email" : "SMS";
+                var msg = $"An item you reserved is now available: {(_items.TryGetValue(rec.ItemId, out var item2) ? item2.Name : rec.ItemId.ToString())} (Code: {(_items.TryGetValue(rec.ItemId, out var item3) ? item3.LibraryCode : string.Empty)}). Please collect within 3 days.";
+                AddNotification(new Notification { Recipient = recipient, Channel = channel, Type = "ReservationAvailable", Message = msg, Status = "Sent" });
+            }
         }
 
         // Borrower operations

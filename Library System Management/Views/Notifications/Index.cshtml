@@ -1,0 +1,33 @@
+@model IEnumerable<Library_System_Management.Models.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="container py-4">
+    <h3>Notification Log</h3>
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Recipient</th>
+                <th>Channel</th>
+                <th>Type</th>
+                <th>Message</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach(var n in Model)
+        {
+            <tr>
+                <td>@n.CreatedAt.ToLocalTime().ToString("g")</td>
+                <td>@n.Recipient</td>
+                <td>@n.Channel</td>
+                <td>@n.Type</td>
+                <td>@n.Message</td>
+                <td>@n.Status</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

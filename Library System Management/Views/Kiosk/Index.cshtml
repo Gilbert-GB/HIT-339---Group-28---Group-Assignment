@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Library Kiosk";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6 text-center">
+            <h2 class="mb-4">Welcome to the Library Kiosk</h2>
+            <p class="lead">Please enter or scan your library code (username or email) to continue.</p>
+            <form method="post" action="/Kiosk/Lookup" class="d-grid gap-2">
+                <input name="code" type="text" class="form-control form-control-lg" placeholder="Library code" autocomplete="off" inputmode="numeric" />
+                <button class="btn btn-primary btn-lg">Continue</button>
+            </form>
+            @if (TempData["KioskError"] != null)
+            {
+                <div class="alert alert-danger mt-3">@TempData["KioskError"]</div>
+            }
+            @if (TempData["KioskSuccess"] != null)
+            {
+                <div class="alert alert-success mt-3">@TempData["KioskSuccess"]</div>
+            }
+            @if (ViewData["Message"] != null)
+            {
+                <div class="alert alert-info mt-3">@ViewData["Message"]</div>
+            }
+        </div>
+    </div>
+</div>

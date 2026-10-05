@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "ContainingType": "Library_System_Management.Controllers.ApiController",
+    "Method": "GetAvailable",
+    "RelativePath": "api/Api/available",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Library_System_Management.Controllers.ApiController",
+    "Method": "GetCategories",
+    "RelativePath": "api/Api/categories",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Library_System_Management.Controllers.ApiController",
+    "Method": "GetStatus",
+    "RelativePath": "api/Api/status",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]

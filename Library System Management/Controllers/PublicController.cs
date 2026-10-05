@@ -20,7 +20,33 @@ namespace Library_System_Management.Controllers
         {
             var it = _repo.GetItem(id);
             if (it == null) return NotFound();
+            var reservations = _repo.GetReservationsForItem(id);
+            ViewData["ReservationCount"] = reservations.Count();
             return View(it);
+        }
+
+        // POST: Place a reservation on an item (public-facing). Accepts item id and an email to identify the borrower.
+        [HttpPost]
+        public IActionResult Reserve(Guid id, string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return BadRequest("Email required");
+            var item = _repo.GetItem(id);
+            if (item == null) return NotFound();
+
+            // find or create borrower by email
+            var borrower = _repo.GetAllBorrowers().FirstOrDefault(b => string.Equals(b.Email, email, StringComparison.OrdinalIgnoreCase));
+            if (borrower == null)
+            {
+                borrower = new Borrower { Email = email, FullName = email };
+                _repo.AddBorrower(borrower);
+            }
+
+            // add reservation
+            var res = new Reservation { ItemId = id, BorrowerId = borrower.Id };
+            _repo.AddReservation(res);
+
+            TempData["ReservationMessage"] = "Your reservation has been placed. We will notify you when the item becomes available.";
+            return RedirectToAction("Details", new { id });
         }
 
         // Index: public search page. Optional parameters:

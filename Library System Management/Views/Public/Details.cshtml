@@ -12,3 +12,17 @@
 </div>
 
 @await Html.PartialAsync("_ItemDetails", Model)
+
+<div class="mt-4">
+    <h5>Reservations</h5>
+    <p>Current queue length: @ViewData["ReservationCount"]</p>
+    <form method="post" action="/Public/Reserve" class="row g-2">
+        <input type="hidden" name="id" value="@Model.Id" />
+        <div class="col-md-6"><input name="email" type="email" class="form-control" placeholder="Your email to place a hold" required /></div>
+        <div class="col-md-3"><button class="btn btn-primary">Place Hold</button></div>
+    </form>
+    @if (TempData["ReservationMessage"] != null)
+    {
+        <div class="alert alert-info mt-2">@TempData["ReservationMessage"]</div>
+    }
+</div>

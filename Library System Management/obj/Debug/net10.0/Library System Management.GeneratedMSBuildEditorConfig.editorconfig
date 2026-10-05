@@ -51,6 +51,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/gilbe/source/repos/Gilbert-GB/HIT-339---Group-28---Group-Assignment/Library System Management/Views/Branches/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQnJhbmNoZXNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/gilbe/source/repos/Gilbert-GB/HIT-339---Group-28---Group-Assignment/Library System Management/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -59,8 +63,24 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/gilbe/source/repos/Gilbert-GB/HIT-339---Group-28---Group-Assignment/Library System Management/Views/Import/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW1wb3J0XEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gilbe/source/repos/Gilbert-GB/HIT-339---Group-28---Group-Assignment/Library System Management/Views/Kiosk/Account.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2lvc2tcQWNjb3VudC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gilbe/source/repos/Gilbert-GB/HIT-339---Group-28---Group-Assignment/Library System Management/Views/Kiosk/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2lvc2tcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/gilbe/source/repos/Gilbert-GB/HIT-339---Group-28---Group-Assignment/Library System Management/Views/Manager/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFuYWdlclxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gilbe/source/repos/Gilbert-GB/HIT-339---Group-28---Group-Assignment/Library System Management/Views/Notifications/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTm90aWZpY2F0aW9uc1xJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/gilbe/source/repos/Gilbert-GB/HIT-339---Group-28---Group-Assignment/Library System Management/Views/Public/Details.cshtml]

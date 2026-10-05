@@ -31,5 +31,24 @@ namespace Library_System_Management.Repositories
 
         // Borrow records
         IEnumerable<BorrowRecord> GetAllBorrowRecords();
+
+        // Branches (multi-branch support)
+        IEnumerable<Branch> GetAllBranches();
+        Branch? GetBranch(Guid id);
+        void AddBranch(Branch b);
+        // Transfer an item to another branch
+        bool TransferItem(Guid itemId, Guid toBranchId);
+
+        // Reservations / waitlist
+        IEnumerable<Reservation> GetReservationsForItem(Guid itemId);
+        void AddReservation(Reservation r);
+        IEnumerable<Reservation> GetAllReservations();
+
+        // Notifications (simulated email/SMS)
+        IEnumerable<Notification> GetAllNotifications();
+        void AddNotification(Notification n);
+
+        // Simple CSV import summary
+        (int success, int failed) ImportItemsFromCsv(string csv);
     }
 }

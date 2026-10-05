@@ -1,0 +1,53 @@
+@model IEnumerable<Library_System_Management.Models.Branch>
+@{
+    ViewData["Title"] = "Branches";
+    var repo = (Library_System_Management.Repositories.ILibraryRepository)ViewContext.HttpContext.RequestServices.GetService(typeof(Library_System_Management.Repositories.ILibraryRepository));
+}
+
+<div class="container py-4">
+    <h3>Branches</h3>
+    @if (TempData["TransferSuccess"] != null)
+    {
+        <div class="alert alert-success">@TempData["TransferSuccess"]</div>
+    }
+    @if (TempData["TransferError"] != null)
+    {
+        <div class="alert alert-danger">@TempData["TransferError"]</div>
+    }
+
+    <div class="row">
+        @foreach(var b in Model)
+        {
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">@b.Name</h5>
+                        <p class="card-text">@b.Address<br/>@b.Phone</p>
+                        <h6>Inventory</h6>
+                        <ul class="small">
+                        @foreach(var it in repo.GetAllItems().Where(i => i.BranchId == b.Id).Take(10))
+                        {
+                            <li>@it.LibraryCode - @it.Name (@it.Status)</li>
+                        }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <hr />
+    <h5>Transfer Item</h5>
+    <form method="post" action="/Branches/Transfer" class="row g-2">
+        <div class="col-md-4"><input name="itemCode" class="form-control" placeholder="Item code (B001)" /></div>
+        <div class="col-md-4">
+            <select name="toBranchId" class="form-select">
+                @foreach(var b in Model)
+                {
+                    <option value="@b.Id">@b.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4"><button class="btn btn-primary">Transfer</button></div>
+    </form>
+</div>

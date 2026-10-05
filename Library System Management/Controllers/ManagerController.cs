@@ -39,5 +39,32 @@ namespace Library_System_Management.Controllers
 
             return View(model);
         }
+
+        // GET: /Manager/ExportCsv
+        // Exports a simple CSV report of items and borrow counts
+        public IActionResult ExportCsv()
+        {
+            var items = _repo.GetAllItems();
+            var records = _repo.GetAllBorrowRecords();
+
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("LibraryCode,Name,Type,Branch,Status,BorrowCount");
+            foreach(var it in items)
+            {
+                var type = it.GetType().Name;
+                var branchName = string.Empty;
+                if (it.BranchId != null)
+                {
+                    var b = _repo.GetBranch(it.BranchId.Value);
+                    branchName = b?.Name ?? string.Empty;
+                }
+                var borrowCount = records.Count(r => r.ItemId == it.Id);
+                csv.AppendLine($"{it.LibraryCode},{Escape(it.Name)},{type},{Escape(branchName)},{it.Status},{borrowCount}");
+            }
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+            return File(bytes, "text/csv", "items-report.csv");
+        }
+
+        private static string Escape(string s) => s?.Replace("\"", "\"\"") ?? string.Empty;
     }
 }
