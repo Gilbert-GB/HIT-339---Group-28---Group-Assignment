@@ -1,0 +1,41 @@
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var td = HttpContextAccessor.HttpContext?.Features.Get<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataDictionary>() ?? TempData;
+    var messages = new List<(string type,string text)>();
+    if (td != null)
+    {
+        if (td.ContainsKey("KioskSuccess")) messages.Add(("success", td["KioskSuccess"].ToString()));
+        if (td.ContainsKey("KioskError")) messages.Add(("danger", td["KioskError"].ToString()));
+        if (td.ContainsKey("ReservationMessage")) messages.Add(("info", td["ReservationMessage"].ToString()));
+        if (td.ContainsKey("ImportResult")) messages.Add(("success", td["ImportResult"].ToString()));
+        if (td.ContainsKey("ImportError")) messages.Add(("danger", td["ImportError"].ToString()));
+        if (td.ContainsKey("TransferSuccess")) messages.Add(("success", td["TransferSuccess"].ToString()));
+        if (td.ContainsKey("TransferError")) messages.Add(("danger", td["TransferError"].ToString()));
+    }
+}
+
+@if (messages.Any())
+{
+    <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+        @foreach(var m in messages)
+        {
+            <div class="toast align-items-center text-bg-@m.type border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">@m.text</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+            var toastList = toastElList.map(function (toastEl) {
+                var t = new bootstrap.Toast(toastEl, { delay: 5000 });
+                t.show();
+                return t;
+            });
+        });
+    </script>
+}

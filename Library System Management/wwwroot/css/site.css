@@ -2,6 +2,11 @@ html {
   font-size: 14px;
 }
 
+/* Global font and smoother rendering */
+body, button, input, select, textarea {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
 @media (min-width: 768px) {
   html {
     font-size: 16px;
@@ -36,11 +41,12 @@ body {
 
 /* --- Custom professional styles --- */
 :root{
-  --primary:#0d6efd; /* bootstrap primary */
-  --accent:#0a58ca;
-  --muted:#6c757d;
-  --surface:#f8f9fa;
-  --card-shadow: 0 6px 18px rgba(13,110,253,0.08);
+  --primary:#0066cc; /* custom primary */
+  --accent:#0b61d6;
+  --muted:#6b7280;
+  --surface:#f7fafc;
+  --card-shadow: 0 10px 30px rgba(2,48,97,0.06);
+  --glass: rgba(255,255,255,0.6);
 }
 
 /* Hero */
@@ -90,9 +96,10 @@ body {
   min-height:52px;
   padding:10px 16px;
   border:0;
-  background:linear-gradient(90deg,var(--primary),var(--accent));
+  background: linear-gradient(90deg,var(--primary),var(--accent));
   color:#fff;
-  font-weight:600;
+  font-weight:700;
+  border-radius:.5rem;
 }
 .search-bar .input-group .btn:active,.search-bar .input-group .btn:focus{outline:none;box-shadow:0 6px 18px rgba(13,110,253,0.12)}
 /* add inline svg magnifier icon via data URI (light, unobtrusive) */
@@ -105,8 +112,8 @@ body {
 
 /* Feature cards */
 .feature-card{
-  background: white;
-  border-radius: .5rem;
+  background: linear-gradient(180deg, #fff, #fbfdff);
+  border-radius: .75rem;
   box-shadow: var(--card-shadow);
   padding:1.25rem;
   height:100%;
@@ -116,15 +123,22 @@ body {
 
 /* CTA */
 .cta{
-  background: linear-gradient(90deg,var(--primary),var(--accent));
+  background: linear-gradient(90deg,var(--primary),rgba(11,97,204,0.95));
   color:white;
   padding:2rem;
-  border-radius:.5rem;
+  border-radius:1rem;
+  box-shadow: 0 16px 40px rgba(2,48,97,0.12);
 }
 
 /* Footer polish */
 .footer{background:#0f1724;color:#cbd5e1;padding:1.5rem 0}
 .footer a{color:#93c5fd}
+
+/* Navbar polish */
+.navbar-brand{font-weight:700;color:var(--primary);letter-spacing:.3px}
+.navbar{background:linear-gradient(0deg, rgba(255,255,255,0.6), rgba(255,255,255,0.6));backdrop-filter: blur(6px)}
+.navbar .nav-link{color:#0f1724}
+.navbar .nav-link:hover{color:var(--primary)}
 
 /* Table small polish */
 .table-small td, .table-small th{padding:.5rem}
@@ -173,11 +187,11 @@ body {
 
 /* Details view styles */
 .item-details{
-  background: white;
+  background: #ffffff;
   border-radius: .6rem;
   padding: 1.25rem;
-  box-shadow: 0 8px 24px rgba(15,23,36,0.06);
-  border: 1px solid #eef6ff;
+  box-shadow: 0 12px 36px rgba(2,48,97,0.06);
+  border: 1px solid rgba(11,77,160,0.04);
 }
 .item-details h5{color:#07355f;margin-top:0.5rem}
 .item-details dl{margin-bottom:0}
@@ -190,6 +204,24 @@ body {
 .list-group-item{border:1px solid rgba(13,110,253,0.06);border-radius:.45rem;margin-bottom:.6rem}
 .list-group-item .mb-1{margin-bottom:.25rem}
 .list-group-item h5{margin-bottom:.25rem}
+
+/* Buttons and quick actions */
+.btn-primary{
+  background: linear-gradient(90deg,var(--primary),var(--accent));
+  border: none;
+  box-shadow: 0 8px 20px rgba(2,48,97,0.08);
+}
+.btn-outline-primary{border-color: rgba(11,77,160,0.12)}
+
+/* Sidebar quick actions */
+.card .btn{white-space:nowrap}
+
+/* Modal improvements */
+.modal-content{border-radius:.8rem;box-shadow:0 20px 50px rgba(2,48,97,0.09)}
+
+/* Kiosk adjustments */
+.kiosk-input{border-radius:.6rem}
+.kiosk-btn{border-radius:.6rem}
 
 /* Hero polish for improved landing appearance */
 .hero{padding:5rem 0;background:linear-gradient(135deg, rgba(13,110,253,0.11), rgba(2,132,199,0.04));}

@@ -1,5 +1,6 @@
 @model IEnumerable<Library_System_Management.Models.BorrowRecord>
 @{
+    Layout = "_KioskLayout";
     ViewData["Title"] = "Account Summary";
     var borrower = (Library_System_Management.Models.Borrower?)ViewData["Borrower"];
 }

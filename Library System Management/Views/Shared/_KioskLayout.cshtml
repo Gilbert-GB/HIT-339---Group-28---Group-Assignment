@@ -1,0 +1,34 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Library Kiosk</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        /* Kiosk-specific adjustments */
+        body { font-size: 1.15rem; }
+        .kiosk-input { font-size: 1.6rem; padding: 1rem; }
+        .kiosk-btn { font-size: 1.3rem; padding: .8rem 1.25rem; }
+        .table-sm td, .table-sm th { padding: .5rem; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="text-center mb-3">
+            <h1 class="h3">Library Kiosk</h1>
+            <p class="text-muted small">Quick checkout station — touch friendly</p>
+        </div>
+        <main class="container">@RenderBody()</main>
+        <footer class="text-center mt-4 small text-muted">In-library self-service kiosk</footer>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await Html.PartialAsync("_Toasts")
+</body>
+</html>

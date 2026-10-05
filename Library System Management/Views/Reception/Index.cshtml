@@ -4,11 +4,17 @@
     ViewData["Title"] = "Reception - Borrow Records";
 }
 
-<h2>Borrow Records</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Borrow Records</h2>
+    <div>
+        <a class="btn btn-primary me-2" asp-action="Borrow">Borrow Item</a>
+        <a class="btn btn-outline-secondary" asp-controller="Branches" asp-action="Index">Branches</a>
+    </div>
+</div>
 
-<a class="btn btn-primary mb-3" asp-action="Borrow">Borrow Item</a>
-
-<table class="table">
+<div class="row">
+    <div class="col-lg-9">
+        <table class="table">
     <thead>
         <tr>
             <th>Item</th>
@@ -44,3 +50,23 @@
     }
     </tbody>
 </table>
+    </div>
+    <div class="col-lg-3">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h6 class="card-title">Reception Quick Actions</h6>
+                <div class="d-grid gap-2">
+                    <a class="btn btn-outline-primary btn-sm" asp-controller="Notifications" asp-action="Index"><i class="bi bi-bell me-1"></i> Notifications</a>
+                    <a class="btn btn-outline-secondary btn-sm" asp-controller="Branches" asp-action="Index"><i class="bi bi-arrow-left-right me-1"></i> Transfer</a>
+                    <a class="btn btn-outline-info btn-sm" asp-controller="Reception" asp-action="Borrow"><i class="bi bi-plus-lg me-1"></i> New Borrow</a>
+                </div>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body small">
+                <h6 class="card-title">Tips</h6>
+                <p class="mb-0">Use the Borrow button to register new borrows. Use Transfers to move items between branches.</p>
+            </div>
+        </div>
+    </div>
+</div>

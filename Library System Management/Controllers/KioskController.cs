@@ -58,5 +58,42 @@ namespace Library_System_Management.Controllers
             }
             return RedirectToAction("Index");
         }
+
+        // NOTE: kiosk registration removed; account creation should be managed by staff or separate flow.
+
+        // POST: Checkout by identifier (email or username) and item code - used by kiosk quick-checkout
+        [HttpPost]
+        public IActionResult CheckoutByIdentifier(string identifier, string itemCode, int days = 14)
+        {
+            if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(itemCode))
+            {
+                TempData["KioskError"] = "Identifier and item code are required.";
+                return RedirectToAction("Index");
+            }
+
+            // Try find borrower by email or username
+            Borrower? borrower = _repo.GetAllBorrowers().FirstOrDefault(b =>
+                (!string.IsNullOrWhiteSpace(b.Email) && string.Equals(b.Email, identifier, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(b.Username) && string.Equals(b.Username, identifier, StringComparison.OrdinalIgnoreCase)));
+
+            if (borrower == null)
+            {
+                // create a lightweight borrower record for quick kiosk registration
+                borrower = new Borrower { Email = identifier, FullName = identifier };
+                _repo.AddBorrower(borrower);
+            }
+
+            var rec = _repo.BorrowItem(itemCode.Trim(), borrower, days);
+            if (rec == null)
+            {
+                TempData["KioskError"] = "Unable to borrow the requested item. It may be unavailable or code is invalid.";
+            }
+            else
+            {
+                TempData["KioskSuccess"] = $"Item {itemCode.Trim()} borrowed successfully for {borrower.FullName}.";
+            }
+
+            return RedirectToAction("Index");
+        }
     }
 }

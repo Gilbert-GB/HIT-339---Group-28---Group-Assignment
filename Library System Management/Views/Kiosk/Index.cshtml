@@ -1,28 +1,174 @@
 @{
+    Layout = "_KioskLayout";
     ViewData["Title"] = "Library Kiosk";
 }
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-12 col-md-6 text-center">
-            <h2 class="mb-4">Welcome to the Library Kiosk</h2>
-            <p class="lead">Please enter or scan your library code (username or email) to continue.</p>
-            <form method="post" action="/Kiosk/Lookup" class="d-grid gap-2">
-                <input name="code" type="text" class="form-control form-control-lg" placeholder="Library code" autocomplete="off" inputmode="numeric" />
-                <button class="btn btn-primary btn-lg">Continue</button>
-            </form>
-            @if (TempData["KioskError"] != null)
-            {
-                <div class="alert alert-danger mt-3">@TempData["KioskError"]</div>
-            }
-            @if (TempData["KioskSuccess"] != null)
-            {
-                <div class="alert alert-success mt-3">@TempData["KioskSuccess"]</div>
-            }
-            @if (ViewData["Message"] != null)
-            {
-                <div class="alert alert-info mt-3">@ViewData["Message"]</div>
-            }
+        <div class="col-12 col-md-10">
+            <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+                <div class="container-fluid">
+                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-center">
+                        <ul class="navbar-nav">
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Developer" asp-action="Index">API Docs</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Admin" asp-action="Index">Admin</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Reception" asp-action="Index">Reception</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Manager" asp-action="Index">Manager</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Notifications" asp-action="Index">Notifications</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Branches" asp-action="Index">Branches</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Import" asp-action="Index">Import</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <ul class="nav nav-tabs mb-3" id="kioskTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="lookup-tab" data-bs-toggle="tab" data-bs-target="#lookup" type="button" role="tab" aria-controls="lookup" aria-selected="true">Lookup</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="browse-tab" data-bs-toggle="tab" data-bs-target="#browse" type="button" role="tab" aria-controls="browse" aria-selected="false">Browse Items</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="kioskTabContent">
+                <div class="tab-pane fade show active" id="lookup" role="tabpanel" aria-labelledby="lookup-tab">
+                    <div class="text-center">
+                        <h2 class="mb-4">Welcome to the Library Kiosk</h2>
+                        <p class="lead">Please enter or scan your library code (username or email) to continue.</p>
+                        <form method="post" action="/Kiosk/Lookup" class="d-grid gap-2">
+                            <input id="lookupInput" name="code" type="text" class="form-control form-control-lg kiosk-input" placeholder="Email or library username" autocomplete="off" inputmode="text" />
+                            <button class="btn btn-primary kiosk-btn">Continue</button>
+                        </form>
+                        @if (TempData["KioskError"] != null)
+                        {
+                            <div class="alert alert-danger mt-3">@TempData["KioskError"]</div>
+                        }
+                        @if (TempData["KioskSuccess"] != null)
+                        {
+                            <div class="alert alert-success mt-3">@TempData["KioskSuccess"]</div>
+                        }
+                        @if (ViewData["Message"] != null)
+                        {
+                            <div class="alert alert-info mt-3">@ViewData["Message"]</div>
+                        }
+                    </div>
+
+                <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Create an account</h5>
+                            <p class="small text-muted">Create a lightweight borrower account to use the kiosk. You can enter an email or a username.</p>
+                            <form method="post" action="/Kiosk/Register" class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label">Full name (optional)</label>
+                                    <input name="FullName" class="form-control" placeholder="Your full name" />
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input name="Email" type="email" class="form-control" placeholder="you@example.com" />
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label">Username</label>
+                                    <input name="Username" class="form-control" placeholder="choose a username" />
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label">Phone (optional)</label>
+                                    <input name="Phone" class="form-control" placeholder="Phone number" />
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-primary">Create account</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tools" role="tabpanel" aria-labelledby="tools-tab">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Quick links</h5>
+                            <p class="small text-muted">Staff tools and developer docs (login required for protected areas).</p>
+                            <div class="d-grid gap-2">
+                                <a class="btn btn-outline-primary" asp-controller="Admin" asp-action="Index">Admin</a>
+                                <a class="btn btn-outline-secondary" asp-controller="Reception" asp-action="Index">Reception</a>
+                                <a class="btn btn-outline-success" asp-controller="Manager" asp-action="Index">Manager</a>
+                                <a class="btn btn-outline-info" asp-controller="Notifications" asp-action="Index">Notifications</a>
+                                <a class="btn btn-outline-dark" asp-controller="Branches" asp-action="Index">Branches</a>
+                                <a class="btn btn-outline-warning" asp-controller="Import" asp-action="Index">Import (CSV)</a>
+                                <a class="btn btn-outline-light border" asp-controller="Developer" asp-action="Index">API Docs</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+                <div class="tab-pane fade" id="browse" role="tabpanel" aria-labelledby="browse-tab">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Available items (tap to quick-checkout)</h5>
+                            @{ var repo = (Library_System_Management.Repositories.ILibraryRepository)ViewContext.HttpContext.RequestServices.GetService(typeof(Library_System_Management.Repositories.ILibraryRepository));
+                               var samples = repo?.GetAllItems().Where(i => i.Status == Library_System_Management.Models.ItemStatus.Available).Take(50) ?? Enumerable.Empty<Library_System_Management.Models.Item>(); }
+                            <div class="table-responsive">
+                                <table id="samplesTable" class="table table-sm mb-0">
+                                    <thead><tr><th>Code</th><th>Item</th><th>Type</th><th>Branch</th></tr></thead>
+                                    <tbody>
+                                    @foreach(var it in samples)
+                                    {
+                                        var branchName = string.Empty;
+                                        if (it.BranchId != null) { var b = repo.GetBranch(it.BranchId.Value); branchName = b?.Name ?? string.Empty; }
+                                        <tr class="sample-row" data-code="@it.LibraryCode">
+                                            <td><strong>@it.LibraryCode</strong></td>
+                                            <td>@it.Name</td>
+                                            <td>@it.GetType().Name</td>
+                                            <td>@branchName</td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+<!-- Quick-checkout modal -->
+<div class="modal fade" id="quickCheckoutModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Quick Checkout</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="/Kiosk/CheckoutByIdentifier">
+      <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Item Code</label>
+            <input id="modalItemCode" name="itemCode" readonly class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Your email or username</label>
+            <input name="identifier" required class="form-control" placeholder="you@example.com or username" />
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Checkout</button>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+    $(function(){
+        $('.sample-row').on('click touchstart', function(){
+            var code = $(this).data('code');
+            $('#modalItemCode').val(code);
+            var modal = new bootstrap.Modal(document.getElementById('quickCheckoutModal'));
+            modal.show();
+        });
+    });
+</script>
 </div>

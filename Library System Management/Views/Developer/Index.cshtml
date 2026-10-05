@@ -1,0 +1,43 @@
+@{
+    ViewData["Title"] = "Developer API";
+}
+
+<div class="container py-4">
+    <h2>Developer API — Read-only endpoints</h2>
+    <p class="text-muted">These endpoints are read-only and intended for integration with external applications. Requests must include the header <code>X-Api-Key</code> with the configured API key.</p>
+
+    <h5>Available items</h5>
+    <pre><code>GET /api/api/available
+Headers:
+  X-Api-Key: &lt;your-key&gt;
+
+Response: 200 OK
+[
+  { "id": "...", "libraryCode": "B001", "name": "The Odyssey", "type": "Book", "branchId": "..." },
+  ...
+]
+    </code></pre>
+
+    <h5>Categories / item types</h5>
+    <pre><code>GET /api/api/categories
+Headers: X-Api-Key
+
+Response: 200 OK
+{ "types": ["Book","Music","Toy"] }
+    </code></pre>
+
+    <h5>Operating status</h5>
+    <pre><code>GET /api/api/status
+Headers: X-Api-Key
+
+Response: 200 OK
+{
+  "open": true,
+  "serverTime": "2026-08-12T12:00:00",
+  "branches": [{ "id": "...", "name": "Central Library", "address": "1 Main St" }]
+}
+    </code></pre>
+
+    <h5>Config</h5>
+    <p class="small text-muted">Set the API key in <code>appsettings.json</code> under <code>ApiKey</code> to enable access. Do not commit secrets to source control.</p>
+</div>

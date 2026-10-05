@@ -4,33 +4,62 @@
     ViewData["Title"] = "Manager - Statistics";
 }
 
-<h2>Library Statistics</h2>
+<h2 class="mb-3">Library Statistics</h2>
 
 <div class="row">
-    <div class="col-md-4">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Items</h5>
-                <p>Total: @Model.TotalItems</p>
-                <p>Available: @Model.Available</p>
-                <p>Borrowed: @Model.Borrowed</p>
+    <div class="col-lg-9">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title text-uppercase text-muted">Items</h6>
+                        <h3 class="mb-0">@Model.TotalItems</h3>
+                        <small class="text-muted">Available: @Model.Available • Borrowed: @Model.Borrowed</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title text-uppercase text-muted">Borrowing</h6>
+                        <h3 class="mb-0">@Model.TotalBorrows</h3>
+                        <small class="text-muted">Outstanding: @Model.OutstandingBorrows</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title text-uppercase text-muted">Fines</h6>
+                        <h3 class="mb-0">@Model.TotalFinesCollected.ToString("C")</h3>
+                        <small class="text-muted">Total fines collected</small>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card mb-3">
+
+    <div class="col-lg-3">
+        <div class="card mb-3 shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Borrowing</h5>
-                <p>Total borrows: @Model.TotalBorrows</p>
-                <p>Outstanding: @Model.OutstandingBorrows</p>
+                <h6 class="card-title">Manager Quick Actions</h6>
+                <p class="small text-muted">Useful links for managers and auditors</p>
+                    <div class="d-grid gap-2">
+                    <a class="btn btn-outline-primary btn-sm" asp-controller="Notifications" asp-action="Index"><i class="bi bi-bell me-1"></i> Notifications</a>
+                    <a class="btn btn-outline-secondary btn-sm" asp-controller="Branches" asp-action="Index"><i class="bi bi-building me-1"></i> Branches</a>
+                    <a class="btn btn-outline-success btn-sm" asp-controller="Import" asp-action="Index"><i class="bi bi-file-earmark-arrow-up me-1"></i> Import</a>
+                    <a class="btn btn-outline-dark btn-sm" asp-controller="Manager" asp-action="ExportCsv"><i class="bi bi-download me-1"></i> Export CSV</a>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card mb-3">
+        <div class="card shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Fines</h5>
-                <p>Total fines collected: @Model.TotalFinesCollected</p>
+                <h6 class="card-title">Quick Stats</h6>
+                <ul class="list-unstyled small mb-0">
+                    <li>Outstanding borrows: <strong>@Model.OutstandingBorrows</strong></li>
+                    <li>Damaged items: <strong>@Model.Damaged</strong></li>
+                    <li>Removed: <strong>@Model.Destroy</strong></li>
+                </ul>
             </div>
         </div>
     </div>

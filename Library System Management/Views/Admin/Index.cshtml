@@ -5,14 +5,16 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Items</h2>
+    <h2 class="mb-0">Items</h2>
     <div>
         <a class="btn btn-success me-2" asp-action="Create">Create Item</a>
         <a class="btn btn-outline-primary" asp-page="/Admin/AssignRole">Manage Users / Roles</a>
     </div>
 </div>
 
-<table class="table table-striped">
+<div class="row">
+    <div class="col-lg-9">
+        <table class="table table-striped">
     <thead>
         <tr>
             <th>Name</th>
@@ -39,3 +41,23 @@
     }
     </tbody>
 </table>
+    </div>
+    <div class="col-lg-3">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h6 class="card-title">Admin Tools</h6>
+                <div class="d-grid gap-2">
+                    <a class="btn btn-outline-secondary btn-sm" asp-controller="Import" asp-action="Index"><i class="bi bi-file-earmark-arrow-up me-1"></i> Import CSV</a>
+                    <a class="btn btn-outline-secondary btn-sm" asp-controller="Branches" asp-action="Index"><i class="bi bi-building me-1"></i> Branches</a>
+                    <a class="btn btn-outline-primary btn-sm" asp-controller="Notifications" asp-action="Index"><i class="bi bi-bell me-1"></i> Notifications</a>
+                </div>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body small">
+                <h6 class="card-title">Guidance</h6>
+                <p class="mb-0">Use Import to bulk-create items. Manage user roles via Manage Users / Roles.</p>
+            </div>
+        </div>
+    </div>
+</div>
