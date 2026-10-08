@@ -15,6 +15,10 @@ namespace Library_System_Management.Repositories
         private readonly ConcurrentDictionary<Guid, Reservation> _reservations = new();
         private readonly ConcurrentDictionary<Guid, Notification> _notifications = new();
 
+        // Tracks due-date reminders already sent, so repeated checks never create duplicates.
+        // Keys: "{recordId}:DueSoon" (once per loan) and "{recordId}:Fine:{yyyyMMdd}" (once per loan per day).
+        private readonly ConcurrentDictionary<string, byte> _sentReminders = new();
+
         // InMemoryLibraryRepository: demo implementation that keeps data in memory.
         // It seeds a collection of sample items, borrowers and borrow records to operate without a database.
         public InMemoryLibraryRepository()
@@ -290,6 +294,66 @@ namespace Library_System_Management.Repositories
         // Notifications
         public IEnumerable<Notification> GetAllNotifications() => _notifications.Values.OrderByDescending(n => n.CreatedAt);
         public void AddNotification(Notification n) { _notifications[n.Id] = n; }
+
+        // GenerateDueDateNotifications: scans active (unreturned) loans and creates
+        //  - "DueSoon" email reminders for loans due within the next 2 days (once per loan), and
+        //  - "FineAccrued" SMS alerts for overdue loans showing the fine so far (once per loan per day).
+        // Called automatically by DueDateNotificationService and manually from the Notifications page.
+        public int GenerateDueDateNotifications(DateTime utcNow)
+        {
+            int created = 0;
+
+            foreach (var rec in _records.Values.Where(r => r.ReturnedAt == null))
+            {
+                var item = GetItem(rec.ItemId);
+                var borrower = GetBorrower(rec.BorrowerId);
+                if (item == null || borrower == null) continue;
+
+                var timeLeft = rec.DueAt - utcNow;
+
+                if (timeLeft > TimeSpan.Zero && timeLeft <= TimeSpan.FromDays(2))
+                {
+                    // due soon: email reminder, sent once per loan
+                    if (_sentReminders.TryAdd($"{rec.Id}:DueSoon", 0))
+                    {
+                        var hasEmail = !string.IsNullOrWhiteSpace(borrower.Email);
+                        AddNotification(new Notification
+                        {
+                            Recipient = hasEmail ? borrower.Email : borrower.FullName,
+                            Channel = "Email",
+                            Type = "DueSoon",
+                            Message = $"Reminder: '{item.Name}' (Code: {item.LibraryCode}) is due back on {rec.DueAt.ToLocalTime():g}.",
+                            Status = "Sent"
+                        });
+                        created++;
+                    }
+                }
+                else if (timeLeft <= TimeSpan.Zero)
+                {
+                    // overdue: fine uses the same rule as ReturnItem ($1 per full day late)
+                    var daysLate = (utcNow - rec.DueAt).Days;
+                    if (daysLate < 1) continue;
+                    var fine = daysLate * 1.0m;
+
+                    // fine alert: SMS to the borrower's phone, sent once per loan per day
+                    if (_sentReminders.TryAdd($"{rec.Id}:Fine:{utcNow:yyyyMMdd}", 0))
+                    {
+                        var hasPhone = !string.IsNullOrWhiteSpace(borrower.Phone);
+                        AddNotification(new Notification
+                        {
+                            Recipient = hasPhone ? borrower.Phone : (string.IsNullOrWhiteSpace(borrower.Email) ? borrower.FullName : borrower.Email),
+                            Channel = hasPhone ? "SMS" : "Email",
+                            Type = "FineAccrued",
+                            Message = $"Overdue: '{item.Name}' (Code: {item.LibraryCode}) was due on {rec.DueAt.ToLocalTime():d}. It is {daysLate} day(s) late with a ${fine:0.00} fine so far, increasing by $1.00 per day.",
+                            Status = "Sent"
+                        });
+                        created++;
+                    }
+                }
+            }
+
+            return created;
+        }
 
         // Simple CSV importer: expects CSV with header: LibraryCode,Type,Name,... This implementation is tolerant and counts successes/failures.
         public (int success, int failed) ImportItemsFromCsv(string csv)

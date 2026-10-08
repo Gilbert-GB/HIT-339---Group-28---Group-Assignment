@@ -47,6 +47,9 @@ namespace Library_System_Management.Repositories
         // Notifications (simulated email/SMS)
         IEnumerable<Notification> GetAllNotifications();
         void AddNotification(Notification n);
+        // Scans active loans and creates "due soon" and "fine accruing" notifications.
+        // Returns the number of new notifications created (duplicates are skipped).
+        int GenerateDueDateNotifications(DateTime utcNow);
 
         // Simple CSV import summary
         (int success, int failed) ImportItemsFromCsv(string csv);

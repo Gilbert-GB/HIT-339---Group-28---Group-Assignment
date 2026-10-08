@@ -4,30 +4,52 @@
 }
 
 <div class="container py-4">
-    <h3>Notification Log</h3>
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Recipient</th>
-                <th>Channel</th>
-                <th>Type</th>
-                <th>Message</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach(var n in Model)
-        {
-            <tr>
-                <td>@n.CreatedAt.ToLocalTime().ToString("g")</td>
-                <td>@n.Recipient</td>
-                <td>@n.Channel</td>
-                <td>@n.Type</td>
-                <td>@n.Message</td>
-                <td>@n.Status</td>
-            </tr>
-        }
-        </tbody>
-    </table>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+        <h3 class="mb-0">Notification Log</h3>
+        <form asp-controller="Notifications" asp-action="RunDueDateCheck" method="post">
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-alarm me-1"></i> Run due-date check
+            </button>
+        </form>
+    </div>
+    <p class="small text-muted">
+        Simulated email and SMS messages. Due-soon and fine reminders are generated automatically every hour,
+        or immediately with the button above.
+    </p>
+
+    @if (TempData["DueCheckMessage"] is string dueCheckMessage)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            @dueCheckMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Recipient</th>
+                    <th>Channel</th>
+                    <th>Type</th>
+                    <th>Message</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var n in Model)
+                {
+                    <tr>
+                        <td>@n.CreatedAt.ToLocalTime().ToString("g")</td>
+                        <td>@n.Recipient</td>
+                        <td>@n.Channel</td>
+                        <td>@n.Type</td>
+                        <td>@n.Message</td>
+                        <td>@n.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

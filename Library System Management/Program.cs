@@ -4,6 +4,7 @@ using Library_System_Management.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Library_System_Management.Repositories;
+using Library_System_Management.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,9 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 builder.Services.AddControllersWithViews();
 // register in-memory repository for demo purposes
 builder.Services.AddSingleton<ILibraryRepository, InMemoryLibraryRepository>();
+// background worker that automatically creates due-soon and fine-accruing notifications
+// on startup and then every hour
+builder.Services.AddHostedService<DueDateNotificationService>();
 
 var app = builder.Build();
 
