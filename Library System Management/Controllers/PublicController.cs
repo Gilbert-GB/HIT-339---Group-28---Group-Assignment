@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Library_System_Management.Controllers
 {
     // PublicController: handles public (anonymous) search and browsing of catalog items.
-    // Supports query, type and status filters.
+    // Supports query, type, status and branch filters.
     public class PublicController : Controller
     {
         private readonly ILibraryRepository _repo;
@@ -50,18 +50,22 @@ namespace Library_System_Management.Controllers
         }
 
         // Index: public search page. Optional parameters:
-        // - q: full-text query against name, description, or library code
+        // - q: query against name, description, library code, author or artist
         // - type: item type filter (book, music, toy, all)
         // - status: item status filter (Available, Borrowed, etc.)
-        public IActionResult Index(string? q, string? type, string? status)
+        // - branch: branch id filter (all branches if empty)
+        public IActionResult Index(string? q, string? type, string? status, string? branch)
         {
             var items = _repo.GetAllItems();
             if (!string.IsNullOrWhiteSpace(q))
             {
                 q = q.Trim();
-                items = items.Where(i => i.Name.Contains(q, System.StringComparison.OrdinalIgnoreCase)
-                    || i.Description.Contains(q ?? string.Empty, System.StringComparison.OrdinalIgnoreCase)
-                    || i.LibraryCode.Contains(q, System.StringComparison.OrdinalIgnoreCase));
+                items = items.Where(i =>
+                    (i.Name ?? string.Empty).Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (i.Description ?? string.Empty).Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (i.LibraryCode ?? string.Empty).Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (i is Book b && (b.Author ?? string.Empty).Contains(q, StringComparison.OrdinalIgnoreCase))
+                    || (i is Music m && (m.Artist ?? string.Empty).Contains(q, StringComparison.OrdinalIgnoreCase)));
             }
 
             // filter by type if provided
@@ -69,27 +73,35 @@ namespace Library_System_Management.Controllers
             {
                 var t = type.ToLowerInvariant();
                 items = items.Where(i =>
-                    (t == "book" && i is Models.Book) ||
-                    (t == "music" && i is Models.Music) ||
-                    (t == "toy" && i is Models.Toy)
+                    (t == "book" && i is Book) ||
+                    (t == "music" && i is Music) ||
+                    (t == "toy" && i is Toy)
                 );
             }
 
             // filter by item status if provided
             if (!string.IsNullOrWhiteSpace(status) && !string.Equals(status, "all", StringComparison.OrdinalIgnoreCase))
             {
-                if (Enum.TryParse<Models.ItemStatus>(status, true, out var st))
+                if (Enum.TryParse<ItemStatus>(status, true, out var st))
                 {
                     items = items.Where(i => i.Status == st);
                 }
             }
 
-            // expose current filter values to the view for UI binding
+            // filter by branch if provided
+            if (Guid.TryParse(branch, out var branchId))
+            {
+                items = items.Where(i => i.BranchId == branchId);
+            }
+
+            // expose current filter values and branch names to the view for UI binding
             ViewData["q"] = q;
             ViewData["type"] = type ?? "all";
             ViewData["status"] = status ?? "all";
+            ViewData["branch"] = branch ?? string.Empty;
+            ViewData["Branches"] = _repo.GetAllBranches().ToList();
 
-            return View(items);
+            return View(items.ToList());
         }
     }
 }

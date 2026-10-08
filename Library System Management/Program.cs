@@ -23,6 +23,9 @@ builder.Services.AddSingleton<ILibraryRepository, InMemoryLibraryRepository>();
 // background worker that automatically creates due-soon and fine-accruing notifications
 // on startup and then every hour
 builder.Services.AddHostedService<DueDateNotificationService>();
+// mock external book/media metadata provider used by the Import page
+// (could be swapped for a real API client without changing the controller)
+builder.Services.AddSingleton<IMetadataProvider, MockMetadataProvider>();
 
 var app = builder.Build();
 
