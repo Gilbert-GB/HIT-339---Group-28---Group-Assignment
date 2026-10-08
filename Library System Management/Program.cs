@@ -22,6 +22,14 @@ builder.Services.AddSingleton<ILibraryRepository, InMemoryLibraryRepository>();
 
 var app = builder.Build();
 
+// Apply any pending migrations automatically, so the Identity database is created
+// the first time the application runs on a new machine (no manual Update-Database step).
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
 // Seed default roles and demo users (Admin, Reception, Manager)
 using (var scope = app.Services.CreateScope())
 {
