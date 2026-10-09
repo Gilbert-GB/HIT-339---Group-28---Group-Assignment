@@ -3,6 +3,9 @@
 
 @{
     ViewData["Title"] = "Item details";
+    var branchName = ViewData["BranchName"] as string;
+    var queueLength = ViewData["ReservationCount"] as int? ?? 0;
+    var canReserve = Model.Status == ItemStatus.Borrowed || Model.Status == ItemStatus.Damaged;
 }
 
 <h2>@Model.Name</h2>
@@ -13,16 +16,40 @@
 
 @await Html.PartialAsync("_ItemDetails", Model)
 
+@if (!string.IsNullOrEmpty(branchName))
+{
+    <p class="mt-2 mb-0"><i class="bi bi-geo-alt me-1"></i>Held at <strong>@branchName</strong></p>
+}
+
 <div class="mt-4">
     <h5>Reservations</h5>
-    <p>Current queue length: @ViewData["ReservationCount"]</p>
-    <form method="post" action="/Public/Reserve" class="row g-2">
-        <input type="hidden" name="id" value="@Model.Id" />
-        <div class="col-md-6"><input name="email" type="email" class="form-control" placeholder="Your email to place a hold" required /></div>
-        <div class="col-md-3"><button class="btn btn-primary">Place Hold</button></div>
-    </form>
+
     @if (TempData["ReservationMessage"] != null)
     {
-        <div class="alert alert-info mt-2">@TempData["ReservationMessage"]</div>
+        <div class="alert alert-info">@TempData["ReservationMessage"]</div>
+    }
+
+    @if (canReserve)
+    {
+        <p>
+            This item is currently <strong>@Model.Status.ToString().ToLower()</strong>.
+            @(queueLength == 0 ? "Nobody is waiting for it yet." : queueLength == 1 ? "1 person is waiting for it." : $"{queueLength} people are waiting for it.")
+            Place a hold and we will notify you when it becomes available.
+        </p>
+        <form asp-controller="Public" asp-action="Reserve" method="post" class="row g-2">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div class="col-md-6"><input name="email" type="email" class="form-control" placeholder="Your email to place a hold" required /></div>
+            <div class="col-md-3"><button type="submit" class="btn btn-primary">Place Hold</button></div>
+        </form>
+    }
+    else if (Model.Status == ItemStatus.Available)
+    {
+        <p class="text-success mb-0">
+            This item is available now@(string.IsNullOrEmpty(branchName) ? "" : $" at {branchName}"). No hold is needed: visit the library or use a self-service kiosk to borrow it.
+        </p>
+    }
+    else
+    {
+        <p class="text-muted mb-0">This item has been removed from circulation and cannot be reserved.</p>
     }
 </div>

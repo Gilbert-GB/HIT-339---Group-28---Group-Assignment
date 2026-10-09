@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Library_System_Management.Controllers
 {
     // PublicController: handles public (anonymous) search and browsing of catalog items.
-    // Supports query, type, status and branch filters.
+    // Supports query, type, status and branch filters, item details and reservations.
     public class PublicController : Controller
     {
         private readonly ILibraryRepository _repo;
@@ -15,25 +15,44 @@ namespace Library_System_Management.Controllers
             _repo = repo;
         }
 
-        // Details: show full details for a single item
+        // Details: show full details for a single item, its branch and its waiting list
         public IActionResult Details(System.Guid id)
         {
             var it = _repo.GetItem(id);
             if (it == null) return NotFound();
-            var reservations = _repo.GetReservationsForItem(id);
-            ViewData["ReservationCount"] = reservations.Count();
+
+            // only patrons still waiting count towards the queue (notified patrons are fulfilled)
+            ViewData["ReservationCount"] = _repo.GetReservationsForItem(id).Count(r => !r.Fulfilled);
+            ViewData["BranchName"] = it.BranchId.HasValue ? _repo.GetBranch(it.BranchId.Value)?.Name : null;
             return View(it);
         }
 
-        // POST: Place a reservation on an item (public-facing). Accepts item id and an email to identify the borrower.
+        // POST: Place a reservation (hold) on an item that is currently Borrowed or Damaged.
+        // Accepts the item id and an email to identify the patron.
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Reserve(Guid id, string email)
         {
-            if (string.IsNullOrWhiteSpace(email)) return BadRequest("Email required");
             var item = _repo.GetItem(id);
             if (item == null) return NotFound();
 
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                TempData["ReservationMessage"] = "Please enter your email address to place a hold.";
+                return RedirectToAction("Details", new { id });
+            }
+
+            // holds are only for items that cannot be borrowed right now but will return
+            if (item.Status != ItemStatus.Borrowed && item.Status != ItemStatus.Damaged)
+            {
+                TempData["ReservationMessage"] = item.Status == ItemStatus.Available
+                    ? "This item is available now, so no hold is needed. Visit the library or use a kiosk to borrow it."
+                    : "This item has been removed from circulation and cannot be reserved.";
+                return RedirectToAction("Details", new { id });
+            }
+
             // find or create borrower by email
+            email = email.Trim();
             var borrower = _repo.GetAllBorrowers().FirstOrDefault(b => string.Equals(b.Email, email, StringComparison.OrdinalIgnoreCase));
             if (borrower == null)
             {
@@ -41,11 +60,18 @@ namespace Library_System_Management.Controllers
                 _repo.AddBorrower(borrower);
             }
 
-            // add reservation
-            var res = new Reservation { ItemId = id, BorrowerId = borrower.Id };
-            _repo.AddReservation(res);
+            // tell the patron if they are already waiting, rather than silently ignoring the request
+            var waiting = _repo.GetReservationsForItem(id).Where(r => !r.Fulfilled).ToList();
+            var existingIndex = waiting.FindIndex(r => r.BorrowerId == borrower.Id);
+            if (existingIndex >= 0)
+            {
+                TempData["ReservationMessage"] = $"You are already on the waiting list for this item (position {existingIndex + 1}).";
+                return RedirectToAction("Details", new { id });
+            }
 
-            TempData["ReservationMessage"] = "Your reservation has been placed. We will notify you when the item becomes available.";
+            _repo.AddReservation(new Reservation { ItemId = id, BorrowerId = borrower.Id });
+
+            TempData["ReservationMessage"] = $"Your hold has been placed. You are number {waiting.Count + 1} on the waiting list, and we will notify you when the item becomes available.";
             return RedirectToAction("Details", new { id });
         }
 
