@@ -37,6 +37,7 @@ All manual tests were performed on a fresh clone with an empty database, using t
 - Checkout of a damaged item: refused with a clear message.
 - Quick checkout with an unknown email: refused, patron directed to reception.
 - Inactivity: account screen returned to the start screen after 90 seconds.
+- Fine payment: invalid card number rejected; valid test card accepted; receipt number issued; fine marked Paid on the account; FinePaid receipt logged in Notifications; manager dashboard and fine revenue audit show collected and outstanding totals correctly.
 
 ### Import
 - CSV upload of `docs/sample-import.csv`: 3 rows imported; 4 rejected with line-specific reasons (unknown type, wrong code prefix, duplicate code, unknown branch).

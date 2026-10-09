@@ -37,14 +37,18 @@
                 <div class="card-body">
                     <div class="small text-muted">Overdue</div>
                     <div class="fs-3 fw-semibold @(Model.OverdueCount > 0 ? "text-danger" : "")">@Model.OverdueCount</div>
+                    @if (Model.FinesAccruing > 0)
+                    {
+                        <div class="small text-danger">@Model.FinesAccruing.ToString("C") accruing</div>
+                    }
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card shadow-sm h-100">
+            <div class="card shadow-sm h-100 @(Model.FinesOwing > 0 ? "border-warning" : "")">
                 <div class="card-body">
-                    <div class="small text-muted">Fines accruing</div>
-                    <div class="fs-3 fw-semibold @(Model.FinesAccruing > 0 ? "text-danger" : "")">@Model.FinesAccruing.ToString("C")</div>
+                    <div class="small text-muted">Fines owing</div>
+                    <div class="fs-3 fw-semibold @(Model.FinesOwing > 0 ? "text-danger" : "")">@Model.FinesOwing.ToString("C")</div>
                 </div>
             </div>
         </div>
@@ -57,6 +61,26 @@
             </div>
         </div>
     </div>
+
+    @if (Model.OutstandingFines.Any())
+    {
+        <h5>Fines to pay</h5>
+        <ul class="list-group mb-4">
+            @foreach (var f in Model.OutstandingFines)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span>
+                        @f.Name <small class="text-muted">(@f.Code)</small>
+                        <div class="small text-muted">Returned late on @f.ReturnedAt?.ToLocalTime().ToString("d")</div>
+                    </span>
+                    <a class="btn btn-warning" asp-controller="Kiosk" asp-action="Pay"
+                       asp-route-borrowerId="@Model.Borrower.Id" asp-route-recordId="@f.RecordId">
+                        Pay @f.Amount.ToString("C")
+                    </a>
+                </li>
+            }
+        </ul>
+    }
 
     <h5>Borrow an item</h5>
     <form asp-controller="Kiosk" asp-action="Checkout" method="post" class="d-flex gap-2 mb-4">
@@ -129,7 +153,7 @@
     {
         <div class="table-responsive">
             <table class="table table-sm">
-                <thead><tr><th>Code</th><th>Item</th><th>Returned</th><th>Fine paid</th></tr></thead>
+                <thead><tr><th>Code</th><th>Item</th><th>Returned</th><th>Fine</th></tr></thead>
                 <tbody>
                     @foreach (var h in Model.RecentReturns)
                     {
@@ -137,7 +161,20 @@
                             <td>@h.Code</td>
                             <td>@h.Name</td>
                             <td>@h.ReturnedAt?.ToLocalTime().ToString("d")</td>
-                            <td>@(h.FinePaid > 0 ? h.FinePaid.ToString("C") : "-")</td>
+                            <td>
+                                @if (h.FineAmount <= 0)
+                                {
+                                    <span>-</span>
+                                }
+                                else if (h.FineSettled)
+                                {
+                                    <span>@h.FineAmount.ToString("C") <span class="badge bg-success">Paid</span></span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">@h.FineAmount.ToString("C") <span class="badge bg-warning text-dark">Owing</span></span>
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>

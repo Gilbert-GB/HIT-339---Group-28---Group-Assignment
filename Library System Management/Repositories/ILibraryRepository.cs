@@ -32,6 +32,11 @@ namespace Library_System_Management.Repositories
         // Borrow records
         IEnumerable<BorrowRecord> GetAllBorrowRecords();
 
+        // Fine payments (simulated)
+        // PayFine: settles the outstanding fine on a returned record. Returns the updated record,
+        // or null if there is nothing to pay (not returned, no fine, or already paid).
+        BorrowRecord? PayFine(Guid borrowRecordId, string paymentMethod);
+
         // Branches (multi-branch support)
         IEnumerable<Branch> GetAllBranches();
         Branch? GetBranch(Guid id);

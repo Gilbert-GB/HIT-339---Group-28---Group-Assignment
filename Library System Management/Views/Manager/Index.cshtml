@@ -32,7 +32,7 @@
                     <div class="card-body">
                         <h6 class="card-title text-uppercase text-muted">Fines</h6>
                         <h3 class="mb-0">@Model.TotalFinesCollected.ToString("C")</h3>
-                        <small class="text-muted">Total fines collected</small>
+                        <small class="text-muted">Collected • Outstanding: @Model.OutstandingFines.ToString("C")</small>
                     </div>
                 </div>
             </div>

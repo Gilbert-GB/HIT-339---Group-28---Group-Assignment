@@ -149,6 +149,7 @@ Features
 - Public search: branch shown on results, branch filter, author and artist search.
 - Item details: holds restricted to Borrowed or Damaged items (per the brief); queue length counts only waiting patrons; duplicate holds show the patron's position; branch shown; anti-forgery protection on the hold form.
 - Kiosk: account summary (overdue status, accruing fines, fines paid, reservations with queue position, recent returns); stays on the account after checkout; Done button and 90-second inactivity sign-out; removed staff links and dead code; quick checkout requires an existing account.
+- Fine payments (simulated): fines are now assessed on return and owing until paid. Patrons pay at the kiosk with a validated card form (Luhn check, expiry, CVV; card numbers never stored), receive a receipt number, and an emailed receipt is logged. Manager dashboard shows fines collected vs outstanding; fine revenue audit adds payment status, date, method and receipt columns with per-branch collected and outstanding totals.
 
 Documentation
 - Rewrote the installation guide (LocalDB required, automatic database setup, in-memory data note, API testing, tests, troubleshooting).

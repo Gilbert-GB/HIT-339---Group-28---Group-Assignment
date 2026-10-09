@@ -131,7 +131,7 @@ namespace Library_System_Management.Repositories
             foreach (var b in borrowers) AddBorrower(b);
 
             // create some borrow records (some returned, some overdue, some active)
-            void AddRecord(Item item, Borrower borrower, DateTime borrowedAt, int days, DateTime? returnedAt = null)
+            BorrowRecord AddRecord(Item item, Borrower borrower, DateTime borrowedAt, int days, DateTime? returnedAt = null)
             {
                 item.Status = returnedAt == null ? ItemStatus.Borrowed : ItemStatus.Available;
                 UpdateItem(item);
@@ -141,6 +141,7 @@ namespace Library_System_Management.Repositories
                     rec.FinePaid = (returnedAt.Value - rec.DueAt).Days * 1.0m;
                 }
                 _records[rec.Id] = rec;
+                return rec;
             }
 
             // active borrow: Alice borrowed C# in Depth 3 days ago for 14 days
@@ -148,7 +149,8 @@ namespace Library_System_Management.Repositories
             var alice = _borrowers.Values.FirstOrDefault(x => x.Email == "alice@example.com");
             if (bookCSharp != null && alice != null) AddRecord(bookCSharp, alice, DateTime.UtcNow.AddDays(-3), 14, null);
 
-            // overdue borrow: Bob borrowed The Odyssey 30 days ago for 14 days, returned late
+            // returned late: Bob borrowed The Odyssey 30 days ago for 14 days, returned 6 days late.
+            // His $6 fine is left unpaid so the fine payment flow can be demonstrated.
             var odyssey = GetItemByCode("B001");
             var bob = _borrowers.Values.FirstOrDefault(x => x.Email == "bob@example.com");
             if (odyssey != null && bob != null) AddRecord(odyssey, bob, DateTime.UtcNow.AddDays(-30), 14, DateTime.UtcNow.AddDays(-10));
@@ -163,7 +165,7 @@ namespace Library_System_Management.Repositories
             var david = _borrowers.Values.FirstOrDefault(x => x.Email == "david@example.com");
             if (rubik != null && david != null) AddRecord(rubik, david, DateTime.UtcNow.AddDays(-20), 7, null);
 
-            // returned borrow with small fine: Eve borrowed B010 25 days ago for 7 days, returned 5 days late
+            // returned on time: Eve borrowed B010 25 days ago for 7 days
             var pride = GetItemByCode("B010");
             var eve = _borrowers.Values.FirstOrDefault(x => x.Email == "eve@example.com");
             if (pride != null && eve != null) AddRecord(pride, eve, DateTime.UtcNow.AddDays(-25), 7, DateTime.UtcNow.AddDays(-18));
@@ -173,8 +175,16 @@ namespace Library_System_Management.Repositories
             var misc1 = GetItemByCode("B014");
             if (misc1 != null && frank != null) AddRecord(misc1, frank, DateTime.UtcNow.AddDays(-2), 10, null);
 
+            // returned late with the fine already paid: Alice paid her $6 fine for Rumours by card
             var misc2 = GetItemByCode("M005");
-            if (misc2 != null && alice != null) AddRecord(misc2, alice, DateTime.UtcNow.AddDays(-40), 14, DateTime.UtcNow.AddDays(-20));
+            if (misc2 != null && alice != null)
+            {
+                var paidRecord = AddRecord(misc2, alice, DateTime.UtcNow.AddDays(-40), 14, DateTime.UtcNow.AddDays(-20));
+                paidRecord.FineSettled = true;
+                paidRecord.FineSettledAt = DateTime.UtcNow.AddDays(-20);
+                paidRecord.PaymentMethod = "Card ending 1111";
+                paidRecord.PaymentReference = "PAY-SEED-0001";
+            }
 
             var misc3 = GetItemByCode("T006");
             if (misc3 != null && bob != null) AddRecord(misc3, bob, DateTime.UtcNow.AddDays(-5), 7, null);
@@ -355,6 +365,34 @@ namespace Library_System_Management.Repositories
             return created;
         }
 
+        // PayFine: settles the outstanding fine on a returned borrow record (simulated payment),
+        // issues a receipt number and logs an emailed receipt in the notification log.
+        public BorrowRecord? PayFine(Guid borrowRecordId, string paymentMethod)
+        {
+            if (!_records.TryGetValue(borrowRecordId, out var rec)) return null;
+            if (rec.ReturnedAt == null || rec.FinePaid <= 0 || rec.FineSettled) return null;
+
+            rec.FineSettled = true;
+            rec.FineSettledAt = DateTime.UtcNow;
+            rec.PaymentMethod = paymentMethod;
+            rec.PaymentReference = $"PAY-{DateTime.UtcNow:yyyyMMdd}-{rec.Id.ToString("N")[..6].ToUpperInvariant()}";
+            _records[rec.Id] = rec;
+
+            var borrower = GetBorrower(rec.BorrowerId);
+            var item = GetItem(rec.ItemId);
+            var hasEmail = borrower != null && !string.IsNullOrWhiteSpace(borrower.Email);
+            AddNotification(new Notification
+            {
+                Recipient = hasEmail ? borrower!.Email : (borrower?.FullName ?? "Unknown"),
+                Channel = hasEmail ? "Email" : "SMS",
+                Type = "FinePaid",
+                Message = $"Payment received: ${rec.FinePaid:0.00} for '{item?.Name ?? "item"}' (Code: {item?.LibraryCode ?? "-"}), paid by {paymentMethod}. Receipt number {rec.PaymentReference}.",
+                Status = "Sent"
+            });
+
+            return rec;
+        }
+
         // Simple CSV importer: expects CSV with header: LibraryCode,Type,Name,... This implementation is tolerant and counts successes/failures.
         public (int success, int failed) ImportItemsFromCsv(string csv)
         {
@@ -437,8 +475,8 @@ namespace Library_System_Management.Repositories
         }
 
         // ReturnItem: mark a borrow record as returned, set the item status back to Available
-        // and compute a simple daily fine if the return is late. Setting the item to Available
-        // via UpdateItem also notifies the next patron in the reservation queue.
+        // and assess a simple daily fine if the return is late (the fine is then owing until paid).
+        // Setting the item to Available via UpdateItem also notifies the next patron in the reservation queue.
         public void ReturnItem(Guid borrowRecordId)
         {
             if (!_records.TryGetValue(borrowRecordId, out var rec)) return;

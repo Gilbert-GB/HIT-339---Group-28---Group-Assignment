@@ -37,7 +37,8 @@ namespace Library_System_Management.Controllers
                 Destroy = items.Where(i => i.Status == ItemStatus.Destroy).Count(),
                 TotalBorrows = records.Count(),
                 OutstandingBorrows = records.Where(r => r.ReturnedAt == null).Count(),
-                TotalFinesCollected = records.Sum(r => r.FinePaid)
+                TotalFinesCollected = records.Where(r => r.FineSettled).Sum(r => r.FinePaid),
+                OutstandingFines = records.Where(r => r.FinePaid > 0 && !r.FineSettled).Sum(r => r.FinePaid)
             };
 
             return View(model);
@@ -63,7 +64,7 @@ namespace Library_System_Management.Controllers
 
         // GET: /Manager/ExportBorrowingCsv
         // Borrowing statistics: a summary block followed by every borrow record,
-        // with its item, borrower, branch, dates, current status and fine.
+        // with its item, borrower, branch, dates, current status, fine and fine status.
         public IActionResult ExportBorrowingCsv()
         {
             var records = _repo.GetAllBorrowRecords().OrderByDescending(r => r.BorrowedAt).ToList();
@@ -82,21 +83,21 @@ namespace Library_System_Management.Controllers
 
             csv.AppendLine("Borrow Records");
             csv.AppendLine(Csv("Library Code", "Item", "Type", "Branch", "Borrower", "Borrower Email",
-                "Borrowed", "Due", "Returned", "Status", "Fine"));
+                "Borrowed", "Due", "Returned", "Status", "Fine", "Fine Status"));
             foreach (var r in records)
             {
                 items.TryGetValue(r.ItemId, out var item);
                 borrowers.TryGetValue(r.BorrowerId, out var borrower);
                 csv.AppendLine(Csv(item?.LibraryCode, item?.Name, item?.GetType().Name, BranchName(item, branches),
                     borrower?.FullName, borrower?.Email,
-                    r.BorrowedAt, r.DueAt, r.ReturnedAt, RecordStatus(r, now), r.FinePaid));
+                    r.BorrowedAt, r.DueAt, r.ReturnedAt, RecordStatus(r, now), r.FinePaid, FineStatus(r)));
             }
             return CsvFile(csv, "borrowing-statistics");
         }
 
         // GET: /Manager/ExportFineAuditCsv
-        // Fine revenue audit: every borrow record that incurred a fine, followed by
-        // totals per branch and an overall total, count and average.
+        // Fine revenue audit: every borrow record that incurred a fine with its payment status,
+        // followed by assessed, collected and outstanding totals per branch and overall.
         public IActionResult ExportFineAuditCsv()
         {
             var fined = _repo.GetAllBorrowRecords()
@@ -110,7 +111,7 @@ namespace Library_System_Management.Controllers
             var csv = new StringBuilder();
             csv.AppendLine("Fine Revenue Audit");
             csv.AppendLine(Csv("Returned", "Due", "Days Late", "Library Code", "Item", "Branch",
-                "Borrower", "Borrower Email", "Fine"));
+                "Borrower", "Borrower Email", "Fine Amount", "Payment Status", "Paid On", "Payment Method", "Receipt"));
             foreach (var r in fined)
             {
                 items.TryGetValue(r.ItemId, out var item);
@@ -119,25 +120,30 @@ namespace Library_System_Management.Controllers
                     ? Math.Max(0, (r.ReturnedAt.Value.Date - r.DueAt.Date).Days)
                     : 0;
                 csv.AppendLine(Csv(r.ReturnedAt, r.DueAt, daysLate, item?.LibraryCode, item?.Name,
-                    BranchName(item, branches), borrower?.FullName, borrower?.Email, r.FinePaid));
+                    BranchName(item, branches), borrower?.FullName, borrower?.Email, r.FinePaid,
+                    FineStatus(r), r.FineSettledAt, r.PaymentMethod, r.PaymentReference));
             }
             csv.AppendLine();
 
             csv.AppendLine("Fine Revenue by Branch");
-            csv.AppendLine(Csv("Branch", "Fined Loans", "Total Fines"));
+            csv.AppendLine(Csv("Branch", "Fined Loans", "Assessed", "Collected", "Outstanding"));
             var byBranch = fined
                 .GroupBy(r => BranchName(items.GetValueOrDefault(r.ItemId), branches))
                 .OrderBy(g => g.Key);
             foreach (var g in byBranch)
             {
-                csv.AppendLine(Csv(g.Key, g.Count(), g.Sum(r => r.FinePaid)));
+                csv.AppendLine(Csv(g.Key, g.Count(), g.Sum(r => r.FinePaid),
+                    g.Where(r => r.FineSettled).Sum(r => r.FinePaid),
+                    g.Where(r => !r.FineSettled).Sum(r => r.FinePaid)));
             }
             csv.AppendLine();
 
-            var total = fined.Sum(r => r.FinePaid);
-            csv.AppendLine(Csv("Total Fines", total));
+            var assessed = fined.Sum(r => r.FinePaid);
+            csv.AppendLine(Csv("Total Assessed", assessed));
+            csv.AppendLine(Csv("Total Collected", fined.Where(r => r.FineSettled).Sum(r => r.FinePaid)));
+            csv.AppendLine(Csv("Total Outstanding", fined.Where(r => !r.FineSettled).Sum(r => r.FinePaid)));
             csv.AppendLine(Csv("Fined Loans", fined.Count));
-            csv.AppendLine(Csv("Average Fine", fined.Count == 0 ? 0m : total / fined.Count));
+            csv.AppendLine(Csv("Average Fine", fined.Count == 0 ? 0m : assessed / fined.Count));
 
             return CsvFile(csv, "fine-revenue-audit");
         }
@@ -204,6 +210,9 @@ namespace Library_System_Management.Controllers
 
         private static string RecordStatus(BorrowRecord r, DateTime now) =>
             r.ReturnedAt != null ? "Returned" : r.DueAt < now ? "Overdue" : "Active";
+
+        private static string FineStatus(BorrowRecord r) =>
+            r.FinePaid <= 0 ? string.Empty : r.FineSettled ? "Paid" : "Outstanding";
 
         private static string BranchName(Item? item, Dictionary<Guid, Branch> branches) =>
             item?.BranchId is Guid id && branches.TryGetValue(id, out var b) ? b.Name : "Unassigned";

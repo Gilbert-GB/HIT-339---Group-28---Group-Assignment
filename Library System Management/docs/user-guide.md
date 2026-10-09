@@ -95,6 +95,18 @@ If the kiosk cannot find your account, please ask at the front desk to register.
 - You will receive a reminder shortly before an item is due, and a message if an item becomes overdue.
 - Notifications in this system are simulated: they are recorded in the staff notification log rather than sent to a real inbox or phone.
 
+### 7. Paying fines
+
+Fines for late returns can be paid at a kiosk:
+
+1. Open your account at the kiosk. Any unpaid fines are listed under **Fines to pay**.
+2. Select **Pay** next to the fine, enter your card details, and select **Pay** to confirm.
+3. A confirmation with your receipt number appears, and an emailed receipt is recorded.
+
+Fines on items that are still overdue keep increasing until the item is returned, so they can only be paid after the return.
+
+Payments in this demonstration are simulated: no real payment is processed and card numbers are never stored.
+
 ---
 
 ## Part 2: Staff quick reference

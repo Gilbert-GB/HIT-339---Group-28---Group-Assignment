@@ -1,6 +1,7 @@
 wwwroot\css\admin.css
 wwwroot\css\site.css
 wwwroot\favicon.ico
+wwwroot\images\library-illustration.svg
 wwwroot\js\admin.js
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
@@ -127,3 +128,4 @@ C:\Users\abtho\source\repos\HIT-339---Group-28---Group-Assignment\Library System
 C:\Users\abtho\source\repos\HIT-339---Group-28---Group-Assignment\Library System Management\wwwroot\lib\jquery\LICENSE.txt
 C:\Users\abtho\source\repos\HIT-339---Group-28---Group-Assignment\Library System Management\wwwroot\css\site.css
 C:\Users\abtho\source\repos\HIT-339---Group-28---Group-Assignment\Library System Management\wwwroot\js\admin.js
+C:\Users\abtho\source\repos\HIT-339---Group-28---Group-Assignment\Library System Management\wwwroot\images\library-illustration.svg
