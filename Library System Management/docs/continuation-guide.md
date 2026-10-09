@@ -19,6 +19,7 @@ All Part B modules from the brief are implemented and working:
 | Reservation waitlist | Public item details, `/Kiosk` | Done: FIFO queue for borrowed or damaged items; next patron notified when the item becomes Available |
 | Data importer | `/Import` | Done: CSV file upload or paste with validation report; mock external metadata provider (ISBN/title/artist lookup) |
 | Manager analytics and export | `/Manager` | Done: four CSV reports (borrowing statistics, fine revenue audit, inventory health, items and borrow counts) |
+| Fine payments (extra, beyond the brief) | `/Kiosk` | Done: simulated card payment with receipt; collected and outstanding fines in the dashboard and fine audit |
 
 Still outstanding (see "Suggested next tasks"): per-location installation instructions, and the Part A documentation.
 
@@ -39,6 +40,7 @@ Fixes
 - Public search: fixed the result count, which displayed "1 ?? 0 items" due to a Razor rendering bug.
 - `appsettings.json`: demo API key added. Without one, every API request returned 401.
 - API status endpoint made public, so the "API Status" nav link works in a browser.
+- Home page: added the missing illustration (`wwwroot/images/library-illustration.svg` was referenced but never existed), removed a duplicate page footer, and made footer text readable on the dark background.
 
 Features
 - Manager reports: borrowing statistics, fine revenue audit and inventory health CSV exports; fixed CSV escaping in the existing export.
@@ -49,14 +51,16 @@ Features
 - Public search: branch on each result, branch filter, author and artist search.
 - Kiosk: account summary with overdue status, accruing fines, fines paid, reservations with queue position and recent returns; stays on the account after checkout; Done button and 90-second inactivity sign-out; staff links and dead code removed; quick checkout requires an existing account.
 - Installation guide rewritten (LocalDB requirement, automatic setup, API testing, tests, troubleshooting).
+- Fine payments (simulated): fines are assessed on return and owing until paid. Patrons pay at the kiosk (`/Kiosk/Pay`) with a validated card form; card numbers are never stored, a receipt number is issued and an emailed receipt is logged. The manager dashboard and fine revenue audit show collected and outstanding totals. `BorrowRecord` gained `FineSettled`, `FineSettledAt`, `PaymentMethod` and `PaymentReference` (no migration needed, as BorrowRecord is not in the DbContext).
 
 Key files
 ---------
-- Models: `Item.cs` (BranchId), `Branch.cs`, `Reservation.cs`, `Notification.cs`, `KioskAccountViewModel.cs`, `ImportViewModel.cs`
+- Models: `Item.cs` (BranchId), `BorrowRecord.cs` (fine payment fields), `Branch.cs`, `Reservation.cs`, `Notification.cs`, `KioskAccountViewModel.cs`, `ImportViewModel.cs`
 - Data: `Data/ApplicationDbContext.cs`, `Data/Migrations/*`
-- Repository: `Repositories/ILibraryRepository.cs`, `Repositories/InMemoryLibraryRepository.cs` (seeding, borrowing, returns, reservation queue, due-date notifications)
+- Repository: `Repositories/ILibraryRepository.cs`, `Repositories/InMemoryLibraryRepository.cs` (seeding, borrowing, returns, reservation queue, due-date notifications, fine payments)
 - Services: `DueDateNotificationService.cs`, `CsvItemImporter.cs`, `MockMetadataProvider.cs`
 - Controllers: `KioskController`, `ApiController`, `NotificationsController`, `BranchesController`, `ImportController`, `ManagerController`, `PublicController`
+- Views: `Views/Kiosk/Account.cshtml`, `Views/Kiosk/Pay.cshtml`, `Views/Import/Index.cshtml`, `Views/Manager/Index.cshtml`, `Views/Public/Index.cshtml`, `Views/Public/Details.cshtml`
 - Startup: `Program.cs`
 
 How to build and run
@@ -74,26 +78,28 @@ Manual test checklist
 - Manager: download all four CSV reports; totals match the dashboard.
 - Search: filter by branch; search "Tolkien" (author search).
 - API: `curl.exe -s -k -H "X-Api-Key: demo-library-api-key" https://localhost:<port>/api/Api/available` returns JSON; without the header returns 401.
+- Fine payments: `/Kiosk`, look up `bob@example.com` (owes $6 for The Odyssey). Pay with test card `4242 4242 4242 4242`, any future expiry and any 3-digit code; a receipt is shown, the fine shows as Paid, and a FinePaid receipt appears in `/Notifications`. The manager dashboard moves the $6 from outstanding to collected.
 
 Design and coding notes
 -----------------------
 - Data is held in `InMemoryLibraryRepository` (singleton). Anything that changes item status should go through `UpdateItem`, which also triggers the reservation queue.
 - ApplicationDbContext includes DbSets for Branch, Reservation and Notification. Any change to these models (or new DbSets) requires a new migration, or the app will fail to start (`PendingModelChangesWarning`).
 - Notifications are simulated: they are logged in memory and shown on `/Notifications`; nothing is actually sent.
+- Payments are simulated: no payment is processed, and only the last four digits of a card number are kept on the receipt.
 - The API key is read from configuration (`ApiKey`). The demo key is for coursework only.
 
 Known limitations
 -----------------
 - Catalogue data resets on restart (in-memory storage).
 - When a reserved item becomes Available, the waiting patron is notified, but the item is not held for them; another patron could borrow it first.
-- The home page image is broken, and staff links (Admin, Borrowing, Manager) show in the nav when logged out (they are still access-protected).
+- Staff links (Admin, Borrowing, Manager) show in the nav when logged out (they are still access-protected).
 - API routes are `/api/Api/...` (doubled "api") because the controller is named `ApiController`.
 
 Suggested next tasks
 --------------------
 1. Per-location installation (HIGH, required by the brief): a way for each library location to run the same install and choose its branch, for example a `LocationBranch` setting in `appsettings.json` or a git branch per location. Must be tested on the VM.
 2. Part A documentation (HIGH): project plan, team contracts, billable hours, meeting minutes, user guide, diagrams.
-3. Small UI fixes (LOW): broken home image, hide staff nav links when logged out, point "API Status" at an API documentation page.
+3. Small UI fixes (LOW): hide staff nav links when logged out, point "API Status" at an API documentation page.
 4. Persist data with EF Core (LOW, optional): implement ILibraryRepository with ApplicationDbContext and swap the registration in `Program.cs`. The brief prioritises breadth over deep refactoring.
 
 Developer tips
