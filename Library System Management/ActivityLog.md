@@ -2,8 +2,8 @@
 
 This file records the implementation activities performed in this workspace while building a simple Library Management System. The log is chronological and comprehensive so you can track what was done and where to verify it.
 
-Prepared by: GitHub Copilot
-Date: 05-10-2026 (updated)
+Prepared by: Gilbert (drafted with GitHub Copilot) and Abdul
+Date: 09-10-2026 (updated)
 
 ---
 
@@ -18,7 +18,7 @@ Date: 05-10-2026 (updated)
 
 ---
 
-## Full chronological log (what was done)
+## Gilbert's changes: Assignment 2 baseline (chronological log)
 
 1) Project and environment
    - Confirmed ASP.NET Core project targeting .NET 10.
@@ -83,7 +83,7 @@ Date: 05-10-2026 (updated)
 
 ---
 
-## Assignment 3 additions (horizontal feature expansion)
+## Gilbert's changes: Assignment 3 additions (horizontal feature expansion)
 
 - Added multi-branch support: Branch model, assigned seeded items to branches, BranchesController and Views/Branches/Index for branch inventory and transfers.
 - Added Reservation model and public reservation endpoint (PublicController.Reserve). Prevent duplicate reservations and maintain FIFO queue. When an item is returned the next patron is automatically identified and a notification is generated.
@@ -139,6 +139,7 @@ Fixes
 - Public search: fixed the result count ("1 ?? 0 items" was a Razor rendering bug).
 - appsettings.json: added a demo API key. Without one, every API request returned 401.
 - API: the status endpoint is now public (no key). The "API Status" nav link opened it in the browser, which cannot send the key header, so it always showed a 401 error. Catalogue endpoints remain key-protected.
+- Home page: added the missing illustration (the referenced image file never existed), removed a duplicate page footer, and made footer text readable on the dark background.
 
 Features
 - Manager exports: borrowing statistics, fine revenue audit and inventory health reports (CSV), plus fixed CSV escaping in the existing export.
@@ -158,6 +159,23 @@ Documentation
 
 Verification
 - See the manual test checklist in docs/continuation-guide.md and the results in docs/testing-summary.md.
+
+Time log (8–9 October 2026; testing included in each task)
+
+| Task | Hours |
+|---|---|
+| Setup, cloning, diagnosing and fixing the startup crash (migrations, test project) | 1.5 |
+| Manager CSV exports (borrowing, fine audit, inventory health) | 1.0 |
+| Seed data across branches; reservation queue fix | 1.0 |
+| Automated due-soon and fine notifications | 1.0 |
+| Importer: CSV upload, validation, mock metadata provider | 1.5 |
+| Search fixes and filters; item details hold rules | 1.0 |
+| Kiosk account summary and checkout flow | 1.0 |
+| API key and status endpoint fixes | 0.5 |
+| Simulated fine payments | 1.0 |
+| UI fixes (footer, home image, duplicate footer) | 0.5 |
+| Documentation (installation guide, user guide, testing summary, continuation guide, activity log) | 1.5 |
+| **Total** | **11.5** |
 
 ---
 
