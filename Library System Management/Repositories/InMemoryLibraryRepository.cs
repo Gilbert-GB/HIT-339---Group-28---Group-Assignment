@@ -15,6 +15,10 @@ namespace Library_System_Management.Repositories
         private readonly ConcurrentDictionary<Guid, Reservation> _reservations = new();
         private readonly ConcurrentDictionary<Guid, Notification> _notifications = new();
 
+        // Tracks due-date reminders already sent, so repeated checks never create duplicates.
+        // Keys: "{recordId}:DueSoon" (once per loan) and "{recordId}:Fine:{yyyyMMdd}" (once per loan per day).
+        private readonly ConcurrentDictionary<string, byte> _sentReminders = new();
+
         // InMemoryLibraryRepository: demo implementation that keeps data in memory.
         // It seeds a collection of sample items, borrowers and borrow records to operate without a database.
         public InMemoryLibraryRepository()
@@ -25,7 +29,7 @@ namespace Library_System_Management.Repositories
                 new Branch{ Name = "East Branch", Address = "200 East Ave", Phone = "555-0002" },
                 new Branch{ Name = "West Branch", Address = "50 West Rd", Phone = "555-0003" }
             };
-            foreach(var br in seededBranches) { _branches[br.Id] = br; }
+            foreach (var br in seededBranches) { _branches[br.Id] = br; }
 
             // seed with many items, borrowers, and borrow records for demo/testing
             // seed canonical lists and extend them programmatically to reach 30 items each for a richer demo dataset
@@ -106,11 +110,14 @@ namespace Library_System_Management.Repositories
                 });
             }
 
-            // add all items and assign them to the Central branch by default
-            var defaultBranchId = seededBranches.First().Id;
-            foreach(var b in books) { b.BranchId = defaultBranchId; AddItem(b); }
-            foreach(var m in music) { m.BranchId = defaultBranchId; AddItem(m); }
-            foreach(var t in toys) { t.BranchId = defaultBranchId; AddItem(t); }
+            // add all items, spreading them evenly across the seeded branches
+            // (round-robin) so every branch has books, music and toys to demo
+            var allSeedItems = books.Cast<Item>().Concat(music).Concat(toys).ToList();
+            for (int i = 0; i < allSeedItems.Count; i++)
+            {
+                allSeedItems[i].BranchId = seededBranches[i % seededBranches.Length].Id;
+                AddItem(allSeedItems[i]);
+            }
 
             // seed borrowers
             var borrowers = new[] {
@@ -121,10 +128,10 @@ namespace Library_System_Management.Repositories
                 new Borrower{FullName="Eve Torres", Email="eve@example.com", Phone="555-0505"},
                 new Borrower{FullName="Frank Wright", Email="frank@example.com", Phone="555-0606"}
             };
-            foreach(var b in borrowers) AddBorrower(b);
+            foreach (var b in borrowers) AddBorrower(b);
 
             // create some borrow records (some returned, some overdue, some active)
-            void AddRecord(Item item, Borrower borrower, DateTime borrowedAt, int days, DateTime? returnedAt=null)
+            BorrowRecord AddRecord(Item item, Borrower borrower, DateTime borrowedAt, int days, DateTime? returnedAt = null)
             {
                 item.Status = returnedAt == null ? ItemStatus.Borrowed : ItemStatus.Available;
                 UpdateItem(item);
@@ -134,6 +141,7 @@ namespace Library_System_Management.Repositories
                     rec.FinePaid = (returnedAt.Value - rec.DueAt).Days * 1.0m;
                 }
                 _records[rec.Id] = rec;
+                return rec;
             }
 
             // active borrow: Alice borrowed C# in Depth 3 days ago for 14 days
@@ -141,7 +149,8 @@ namespace Library_System_Management.Repositories
             var alice = _borrowers.Values.FirstOrDefault(x => x.Email == "alice@example.com");
             if (bookCSharp != null && alice != null) AddRecord(bookCSharp, alice, DateTime.UtcNow.AddDays(-3), 14, null);
 
-            // overdue borrow: Bob borrowed The Odyssey 30 days ago for 14 days, returned late
+            // returned late: Bob borrowed The Odyssey 30 days ago for 14 days, returned 6 days late.
+            // His $6 fine is left unpaid so the fine payment flow can be demonstrated.
             var odyssey = GetItemByCode("B001");
             var bob = _borrowers.Values.FirstOrDefault(x => x.Email == "bob@example.com");
             if (odyssey != null && bob != null) AddRecord(odyssey, bob, DateTime.UtcNow.AddDays(-30), 14, DateTime.UtcNow.AddDays(-10));
@@ -156,7 +165,7 @@ namespace Library_System_Management.Repositories
             var david = _borrowers.Values.FirstOrDefault(x => x.Email == "david@example.com");
             if (rubik != null && david != null) AddRecord(rubik, david, DateTime.UtcNow.AddDays(-20), 7, null);
 
-            // returned borrow with small fine: Eve borrowed B010 25 days ago for 7 days, returned 5 days late
+            // returned on time: Eve borrowed B010 25 days ago for 7 days
             var pride = GetItemByCode("B010");
             var eve = _borrowers.Values.FirstOrDefault(x => x.Email == "eve@example.com");
             if (pride != null && eve != null) AddRecord(pride, eve, DateTime.UtcNow.AddDays(-25), 7, DateTime.UtcNow.AddDays(-18));
@@ -166,12 +175,47 @@ namespace Library_System_Management.Repositories
             var misc1 = GetItemByCode("B014");
             if (misc1 != null && frank != null) AddRecord(misc1, frank, DateTime.UtcNow.AddDays(-2), 10, null);
 
+            // returned late with the fine already paid: Alice paid her $6 fine for Rumours by card
             var misc2 = GetItemByCode("M005");
-            if (misc2 != null && alice != null) AddRecord(misc2, alice, DateTime.UtcNow.AddDays(-40), 14, DateTime.UtcNow.AddDays(-20));
+            if (misc2 != null && alice != null)
+            {
+                var paidRecord = AddRecord(misc2, alice, DateTime.UtcNow.AddDays(-40), 14, DateTime.UtcNow.AddDays(-20));
+                paidRecord.FineSettled = true;
+                paidRecord.FineSettledAt = DateTime.UtcNow.AddDays(-20);
+                paidRecord.PaymentMethod = "Card ending 1111";
+                paidRecord.PaymentReference = "PAY-SEED-0001";
+            }
 
             var misc3 = GetItemByCode("T006");
             if (misc3 != null && bob != null) AddRecord(misc3, bob, DateTime.UtcNow.AddDays(-5), 7, null);
 
+            // mark a few items as damaged or destroyed so the inventory health report
+            // and the reserve-a-damaged-item flow have data to show
+            void SetStatus(string code, ItemStatus status)
+            {
+                var it = GetItemByCode(code);
+                if (it == null) return;
+                it.Status = status;
+                UpdateItem(it);
+            }
+            SetStatus("B008", ItemStatus.Damaged);  // Moby Dick
+            SetStatus("M003", ItemStatus.Damaged);  // Thriller
+            SetStatus("T004", ItemStatus.Damaged);  // Remote Car
+            SetStatus("M006", ItemStatus.Destroy);  // The Wall
+            SetStatus("T005", ItemStatus.Destroy);  // Play-Doh
+
+            // seed reservations: two patrons queued for a borrowed item (shows the FIFO
+            // waitlist) and one patron waiting on a damaged item.
+            // Added last, after all UpdateItem calls above, so no notifications fire during seeding.
+            void Reserve(string code, Borrower? borrower, DateTime createdAt)
+            {
+                var it = GetItemByCode(code);
+                if (it == null || borrower == null) return;
+                AddReservation(new Reservation { ItemId = it.Id, BorrowerId = borrower.Id, CreatedAt = createdAt, Fulfilled = false });
+            }
+            Reserve("B014", eve, DateTime.UtcNow.AddDays(-1));   // The Hobbit, first in line
+            Reserve("B014", bob, DateTime.UtcNow.AddHours(-6));  // The Hobbit, second in line
+            Reserve("M003", carol, DateTime.UtcNow.AddDays(-2)); // Thriller (damaged)
         }
 
         // AddItem: add or replace an item in the in-memory collection.
@@ -195,10 +239,40 @@ namespace Library_System_Management.Repositories
             _items.TryRemove(id, out _);
         }
 
-        // UpdateItem: replace item state in the collection.
+        // UpdateItem: replace item state in the collection. If the item is now Available,
+        // notify the next patron in its reservation queue (covers returns and admin repairs).
         public void UpdateItem(Item item)
         {
             _items[item.Id] = item;
+            if (item.Status == ItemStatus.Available)
+            {
+                NotifyNextReservation(item);
+            }
+        }
+
+        // NotifyNextReservation: fulfil the oldest unfulfilled reservation for this item
+        // (FIFO) and send that patron a simulated "item available" notification.
+        private void NotifyNextReservation(Item item)
+        {
+            var next = _reservations.Values
+                .Where(r => r.ItemId == item.Id && !r.Fulfilled)
+                .OrderBy(r => r.CreatedAt)
+                .FirstOrDefault();
+            if (next == null) return;
+
+            next.Fulfilled = true;
+            _reservations[next.Id] = next;
+
+            var borrower = _borrowers.TryGetValue(next.BorrowerId, out var b) ? b : null;
+            var hasEmail = borrower != null && !string.IsNullOrWhiteSpace(borrower.Email);
+            AddNotification(new Notification
+            {
+                Recipient = hasEmail ? borrower!.Email : (borrower?.FullName ?? "Unknown"),
+                Channel = hasEmail ? "Email" : "SMS",
+                Type = "ReservationAvailable",
+                Message = $"An item you reserved is now available: {item.Name} (Code: {item.LibraryCode}). Please collect within 3 days.",
+                Status = "Sent"
+            });
         }
 
         // Branch operations
@@ -231,13 +305,101 @@ namespace Library_System_Management.Repositories
         public IEnumerable<Notification> GetAllNotifications() => _notifications.Values.OrderByDescending(n => n.CreatedAt);
         public void AddNotification(Notification n) { _notifications[n.Id] = n; }
 
+        // GenerateDueDateNotifications: scans active (unreturned) loans and creates
+        //  - "DueSoon" email reminders for loans due within the next 2 days (once per loan), and
+        //  - "FineAccrued" SMS alerts for overdue loans showing the fine so far (once per loan per day).
+        // Called automatically by DueDateNotificationService and manually from the Notifications page.
+        public int GenerateDueDateNotifications(DateTime utcNow)
+        {
+            int created = 0;
+
+            foreach (var rec in _records.Values.Where(r => r.ReturnedAt == null))
+            {
+                var item = GetItem(rec.ItemId);
+                var borrower = GetBorrower(rec.BorrowerId);
+                if (item == null || borrower == null) continue;
+
+                var timeLeft = rec.DueAt - utcNow;
+
+                if (timeLeft > TimeSpan.Zero && timeLeft <= TimeSpan.FromDays(2))
+                {
+                    // due soon: email reminder, sent once per loan
+                    if (_sentReminders.TryAdd($"{rec.Id}:DueSoon", 0))
+                    {
+                        var hasEmail = !string.IsNullOrWhiteSpace(borrower.Email);
+                        AddNotification(new Notification
+                        {
+                            Recipient = hasEmail ? borrower.Email : borrower.FullName,
+                            Channel = "Email",
+                            Type = "DueSoon",
+                            Message = $"Reminder: '{item.Name}' (Code: {item.LibraryCode}) is due back on {rec.DueAt.ToLocalTime():g}.",
+                            Status = "Sent"
+                        });
+                        created++;
+                    }
+                }
+                else if (timeLeft <= TimeSpan.Zero)
+                {
+                    // overdue: fine uses the same rule as ReturnItem ($1 per full day late)
+                    var daysLate = (utcNow - rec.DueAt).Days;
+                    if (daysLate < 1) continue;
+                    var fine = daysLate * 1.0m;
+
+                    // fine alert: SMS to the borrower's phone, sent once per loan per day
+                    if (_sentReminders.TryAdd($"{rec.Id}:Fine:{utcNow:yyyyMMdd}", 0))
+                    {
+                        var hasPhone = !string.IsNullOrWhiteSpace(borrower.Phone);
+                        AddNotification(new Notification
+                        {
+                            Recipient = hasPhone ? borrower.Phone : (string.IsNullOrWhiteSpace(borrower.Email) ? borrower.FullName : borrower.Email),
+                            Channel = hasPhone ? "SMS" : "Email",
+                            Type = "FineAccrued",
+                            Message = $"Overdue: '{item.Name}' (Code: {item.LibraryCode}) was due on {rec.DueAt.ToLocalTime():d}. It is {daysLate} day(s) late with a ${fine:0.00} fine so far, increasing by $1.00 per day.",
+                            Status = "Sent"
+                        });
+                        created++;
+                    }
+                }
+            }
+
+            return created;
+        }
+
+        // PayFine: settles the outstanding fine on a returned borrow record (simulated payment),
+        // issues a receipt number and logs an emailed receipt in the notification log.
+        public BorrowRecord? PayFine(Guid borrowRecordId, string paymentMethod)
+        {
+            if (!_records.TryGetValue(borrowRecordId, out var rec)) return null;
+            if (rec.ReturnedAt == null || rec.FinePaid <= 0 || rec.FineSettled) return null;
+
+            rec.FineSettled = true;
+            rec.FineSettledAt = DateTime.UtcNow;
+            rec.PaymentMethod = paymentMethod;
+            rec.PaymentReference = $"PAY-{DateTime.UtcNow:yyyyMMdd}-{rec.Id.ToString("N")[..6].ToUpperInvariant()}";
+            _records[rec.Id] = rec;
+
+            var borrower = GetBorrower(rec.BorrowerId);
+            var item = GetItem(rec.ItemId);
+            var hasEmail = borrower != null && !string.IsNullOrWhiteSpace(borrower.Email);
+            AddNotification(new Notification
+            {
+                Recipient = hasEmail ? borrower!.Email : (borrower?.FullName ?? "Unknown"),
+                Channel = hasEmail ? "Email" : "SMS",
+                Type = "FinePaid",
+                Message = $"Payment received: ${rec.FinePaid:0.00} for '{item?.Name ?? "item"}' (Code: {item?.LibraryCode ?? "-"}), paid by {paymentMethod}. Receipt number {rec.PaymentReference}.",
+                Status = "Sent"
+            });
+
+            return rec;
+        }
+
         // Simple CSV importer: expects CSV with header: LibraryCode,Type,Name,... This implementation is tolerant and counts successes/failures.
         public (int success, int failed) ImportItemsFromCsv(string csv)
         {
-            if (string.IsNullOrWhiteSpace(csv)) return (0,0);
+            if (string.IsNullOrWhiteSpace(csv)) return (0, 0);
             var lines = csv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             int success = 0, failed = 0;
-            foreach(var line in lines.Skip(1)) // skip header
+            foreach (var line in lines.Skip(1)) // skip header
             {
                 try
                 {
@@ -246,10 +408,11 @@ namespace Library_System_Management.Repositories
                     var code = parts[0].Trim();
                     var type = parts[1].Trim().ToLowerInvariant();
                     var name = parts[2].Trim();
-                    Item it = type switch {
-                        "book" => new Book{ LibraryCode = code, Name = name },
-                        "music" => new Music{ LibraryCode = code, Name = name },
-                        "toy" => new Toy{ LibraryCode = code, Name = name },
+                    Item it = type switch
+                    {
+                        "book" => new Book { LibraryCode = code, Name = name },
+                        "music" => new Music { LibraryCode = code, Name = name },
+                        "toy" => new Toy { LibraryCode = code, Name = name },
                         _ => null
                     };
                     if (it == null) { failed++; continue; }
@@ -312,15 +475,12 @@ namespace Library_System_Management.Repositories
         }
 
         // ReturnItem: mark a borrow record as returned, set the item status back to Available
-        // and compute a simple daily fine if the return is late.
+        // and assess a simple daily fine if the return is late (the fine is then owing until paid).
+        // Setting the item to Available via UpdateItem also notifies the next patron in the reservation queue.
         public void ReturnItem(Guid borrowRecordId)
         {
             if (!_records.TryGetValue(borrowRecordId, out var rec)) return;
-            if (_items.TryGetValue(rec.ItemId, out var item))
-            {
-                item.Status = ItemStatus.Available;
-                UpdateItem(item);
-            }
+
             rec.ReturnedAt = DateTime.UtcNow;
             // calculate simple fine: $1 per day late
             if (rec.ReturnedAt > rec.DueAt)
@@ -331,17 +491,10 @@ namespace Library_System_Management.Repositories
             }
             _records[rec.Id] = rec;
 
-            // After return, check reservation queue and notify next patron if any
-            var next = _reservations.Values.Where(r => r.ItemId == rec.ItemId && !r.Fulfilled).OrderBy(r => r.CreatedAt).FirstOrDefault();
-            if (next != null)
+            if (_items.TryGetValue(rec.ItemId, out var item))
             {
-                next.Fulfilled = true;
-                _reservations[next.Id] = next;
-                var borrower = _borrowers.TryGetValue(next.BorrowerId, out var b) ? b : null;
-                var recipient = borrower != null && !string.IsNullOrWhiteSpace(borrower.Email) ? borrower.Email : (borrower?.FullName ?? "Unknown");
-                var channel = borrower != null && !string.IsNullOrWhiteSpace(borrower.Email) ? "Email" : "SMS";
-                var msg = $"An item you reserved is now available: {(_items.TryGetValue(rec.ItemId, out var item2) ? item2.Name : rec.ItemId.ToString())} (Code: {(_items.TryGetValue(rec.ItemId, out var item3) ? item3.LibraryCode : string.Empty)}). Please collect within 3 days.";
-                AddNotification(new Notification { Recipient = recipient, Channel = channel, Type = "ReservationAvailable", Message = msg, Status = "Sent" });
+                item.Status = ItemStatus.Available;
+                UpdateItem(item);
             }
         }
 

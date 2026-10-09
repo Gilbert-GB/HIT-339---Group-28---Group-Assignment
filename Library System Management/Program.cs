@@ -4,6 +4,7 @@ using Library_System_Management.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Library_System_Management.Repositories;
+using Library_System_Management.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +20,22 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 builder.Services.AddControllersWithViews();
 // register in-memory repository for demo purposes
 builder.Services.AddSingleton<ILibraryRepository, InMemoryLibraryRepository>();
+// background worker that automatically creates due-soon and fine-accruing notifications
+// on startup and then every hour
+builder.Services.AddHostedService<DueDateNotificationService>();
+// mock external book/media metadata provider used by the Import page
+// (could be swapped for a real API client without changing the controller)
+builder.Services.AddSingleton<IMetadataProvider, MockMetadataProvider>();
 
 var app = builder.Build();
+
+// Apply any pending migrations automatically, so the Identity database is created
+// the first time the application runs on a new machine (no manual Update-Database step).
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
 
 // Seed default roles and demo users (Admin, Reception, Manager)
 using (var scope = app.Services.CreateScope())

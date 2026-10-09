@@ -130,6 +130,35 @@ All additions are implemented additively and reuse existing repository and contr
 
 ---
 
-If you want, I can implement any of the recommended next steps now — tell me which one and I will apply the changes.
+## Abdul's changes (October 2026)
+
+Fixes
+- Program.cs: migrations now apply automatically on startup. Previously the app failed on a fresh machine because the Identity database was never created, and seeding errors were hidden by a try/catch.
+- Added SyncModel migration covering the Branch, Notification and Reservation DbSets (unused groundwork for EF persistence; without it, .NET 10 refused to apply migrations).
+- Added the existing test project to the solution file (it was not included, so the tests never ran). All tests pass.
+- Public search: fixed the result count ("1 ?? 0 items" was a Razor rendering bug).
+- appsettings.json: added a demo API key. Without one, every API request returned 401.
+- API: the status endpoint is now public (no key). The "API Status" nav link opened it in the browser, which cannot send the key header, so it always showed a 401 error. Catalogue endpoints remain key-protected.
+
+Features
+- Manager exports: borrowing statistics, fine revenue audit and inventory health reports (CSV), plus fixed CSV escaping in the existing export.
+- Seed data: items spread across all three branches; damaged and destroyed items; seeded reservations (FIFO queue demo).
+- Reservations: the next patron is now notified whenever an item becomes Available, including admin repairs, not only returns.
+- Notifications: automated "due soon" (Email) and "fine accruing" (SMS) reminders via a background service (startup, then hourly), plus a manual "Run due-date check" button. Reminders are never duplicated.
+- Importer: CSV file upload with line-by-line validation (type, code prefix, duplicates, branch, numbers); mock external metadata provider (search by ISBN, title or artist; one-click import with automatic code); sample file in docs/sample-import.csv.
+- Public search: branch shown on results, branch filter, author and artist search.
+- Item details: holds restricted to Borrowed or Damaged items (per the brief); queue length counts only waiting patrons; duplicate holds show the patron's position; branch shown; anti-forgery protection on the hold form.
+- Kiosk: account summary (overdue status, accruing fines, fines paid, reservations with queue position, recent returns); stays on the account after checkout; Done button and 90-second inactivity sign-out; removed staff links and dead code; quick checkout requires an existing account.
+- Fine payments (simulated): fines are now assessed on return and owing until paid. Patrons pay at the kiosk with a validated card form (Luhn check, expiry, CVV; card numbers never stored), receive a receipt number, and an emailed receipt is logged. Manager dashboard shows fines collected vs outstanding; fine revenue audit adds payment status, date, method and receipt columns with per-branch collected and outstanding totals.
+
+Documentation
+- Rewrote the installation guide (LocalDB required, automatic database setup, in-memory data note, API testing, tests, troubleshooting).
+- Rewrote the user guide with a patron section on search, filters, reservations and the kiosk, plus a staff quick reference.
+- Updated the testing summary and the continuation guide (current status, known limitations, next tasks).
+
+Verification
+- See the manual test checklist in docs/continuation-guide.md and the results in docs/testing-summary.md.
+
+---
 
 *** End of log

@@ -1,24 +1,124 @@
+@model Library_System_Management.Models.ImportViewModel
 @{
     ViewData["Title"] = "Import Items";
 }
 
 <div class="container py-4">
-    <h3>Import Items (CSV)</h3>
-    <p>Paste CSV content with header: LibraryCode,Type,Name (additional columns ignored)</p>
+    <h3>Import Items</h3>
+    <p class="text-muted">Bulk-import items from a CSV file, or look up items from an external metadata provider.</p>
 
-    @if (TempData["ImportError"] != null)
+    @if (Model.Error != null)
     {
-        <div class="alert alert-danger">@TempData["ImportError"]</div>
+        <div class="alert alert-danger">@Model.Error</div>
     }
-    @if (TempData["ImportResult"] != null)
+    @if (Model.Message != null)
     {
-        <div class="alert alert-success">@TempData["ImportResult"]</div>
+        <div class="alert alert-success">@Model.Message</div>
     }
-
-    <form method="post" action="/Import/Upload">
-        <div class="mb-3">
-            <textarea name="csvContent" class="form-control" rows="10" placeholder="LibraryCode,Type,Name\nB100,Book,Example Book"></textarea>
+    @if (Model.Summary != null)
+    {
+        <div class="alert @(Model.Summary.Failed == 0 ? "alert-success" : "alert-warning")">
+            <strong>Import complete.</strong> Imported: @Model.Summary.Imported, Failed: @Model.Summary.Failed
+            @if (Model.Summary.Errors.Any())
+            {
+                <ul class="mb-0 mt-2 small">
+                    @foreach (var error in Model.Summary.Errors)
+                    {
+                        <li>@error</li>
+                    }
+                </ul>
+            }
         </div>
-        <button class="btn btn-primary">Import</button>
-    </form>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-filetype-csv me-1"></i> CSV Import</h5>
+                    <p class="small text-muted">
+                        Required columns: <code>LibraryCode</code>, <code>Type</code>, <code>Name</code>.
+                        Optional: <code>Branch</code>, <code>Author</code>, <code>Genre</code>, <code>Pages</code>,
+                        <code>Artist</code>, <code>Year</code>, <code>Format</code>, <code>ToyType</code>, <code>RecommendedAge</code>.
+                        Codes must start with B (Book), M (Music) or T (Toy). Rows without a Branch go to Central Library.
+                    </p>
+                    <form asp-controller="Import" asp-action="Upload" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label" for="csvFile">Upload a CSV file</label>
+                            <input type="file" class="form-control" id="csvFile" name="csvFile" accept=".csv,text/csv" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="csvContent">Or paste CSV content</label>
+                            <textarea id="csvContent" name="csvContent" class="form-control font-monospace" rows="6"
+                                      placeholder="LibraryCode,Type,Name,Branch,Author&#10;B100,Book,Example Book,East Branch,Jane Doe"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Import CSV</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-cloud-download me-1"></i> External Catalogue Lookup</h5>
+                    <p class="small text-muted">
+                        Search <strong>@Model.ProviderName</strong>, a mock provider that simulates an external
+                        book and media metadata API, by ISBN, title or artist.
+                    </p>
+                    <form asp-controller="Import" asp-action="Lookup" method="get" class="d-flex gap-2 mb-3">
+                        <input type="text" name="query" value="@Model.Query" class="form-control"
+                               placeholder="e.g. 9780441013593, Dune or Daft Punk" />
+                        <button type="submit" class="btn btn-outline-primary">Search</button>
+                    </form>
+
+                    @if (Model.Results.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Creator</th>
+                                        <th>Type</th>
+                                        <th>Import to</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var r in Model.Results)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @r.Title
+                                                <div class="small text-muted">@r.ExternalId</div>
+                                            </td>
+                                            <td>@r.Creator</td>
+                                            <td>@r.Type@(r.Year.HasValue ? $" ({r.Year})" : "")</td>
+                                            <td>
+                                                <form asp-controller="Import" asp-action="ImportExternal" method="post" class="d-flex gap-1">
+                                                    <input type="hidden" name="externalId" value="@r.ExternalId" />
+                                                    <input type="hidden" name="query" value="@Model.Query" />
+                                                    <select name="branchId" class="form-select form-select-sm">
+                                                        @foreach (var b in Model.Branches)
+                                                        {
+                                                            <option value="@b.Id">@b.Name</option>
+                                                        }
+                                                    </select>
+                                                    <button type="submit" class="btn btn-sm btn-success">Import</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(Model.Query))
+                    {
+                        <p class="text-muted mb-0">No matches found for "@Model.Query".</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
