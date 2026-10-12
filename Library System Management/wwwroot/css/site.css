@@ -28,6 +28,13 @@ body {
     color: #1f2937;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+body > .container {
+    flex: 1 0 auto;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
@@ -368,6 +375,93 @@ body {
     .hero .btn-primary {
         box-shadow: 0 6px 18px rgba(13,110,253,0.12)
     }
+
+    .hero-visual {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-carousel-frame {
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+    }
+
+    .hero-carousel-viewport {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        min-height: 380px;
+    }
+
+    .hero-carousel-frame .carousel-inner {
+        width: 100%;
+        height: 100%;
+        border-radius: 1.25rem;
+        background: #fff;
+        box-shadow: 0 20px 45px rgba(2,48,97,0.12);
+    }
+
+    .hero-carousel-frame .carousel-item {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .hero .hero-carousel-image {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+    }
+
+    .hero-carousel-indicators {
+        bottom: 0.75rem;
+        margin-bottom: 0;
+    }
+
+    .hero-carousel-indicators button {
+        width: 0.7rem;
+        height: 0.7rem;
+        border-radius: 50%;
+        border: 0;
+        padding: 0;
+        background: rgba(15, 23, 36, 0.35);
+        opacity: 1;
+        transition: transform 160ms ease, background-color 160ms ease;
+    }
+
+    .hero-carousel-indicators .active {
+        background: var(--primary);
+        transform: scale(1.2);
+    }
+
+    .hero-carousel-indicators button:hover {
+        background: rgba(15, 23, 36, 0.55);
+    }
+
+@media (max-width: 991.98px) {
+    .hero-carousel-frame {
+        max-width: 100%;
+    }
+
+    .hero-carousel-viewport {
+        min-height: 320px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-carousel-slide,
+    .hero-carousel-indicators button {
+        transition: none;
+    }
+}
 
 /* Compact top nav (removed Home link case) */
 .navbar .nav-link {
