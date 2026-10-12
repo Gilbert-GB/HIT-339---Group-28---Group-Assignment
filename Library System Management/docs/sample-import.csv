@@ -1,0 +1,8 @@
+﻿LibraryCode,Type,Name,Branch,Author,Genre,Pages,Artist,Year,Format,ToyType,RecommendedAge
+B101,Book,"Thinking, Fast and Slow",East Branch,Daniel Kahneman,Psychology,499,,,,,
+M101,Music,Blue,West Branch,,,,Joni Mitchell,1971,Vinyl,,
+T101,Toy,Marble Run,,,,,,,,Construction,6
+X102,Comic,Unknown Type,,,,,,,,,
+M102,Book,Wrong Prefix,,,,,,,,,
+B001,Book,Duplicate Code,,,,,,,,,
+B103,Book,Missing Branch,North Branch,,,,,,,,

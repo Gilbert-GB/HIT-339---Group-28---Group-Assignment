@@ -32,6 +32,11 @@ namespace Library_System_Management.Repositories
         // Borrow records
         IEnumerable<BorrowRecord> GetAllBorrowRecords();
 
+        // Fine payments (simulated)
+        // PayFine: settles the outstanding fine on a returned record. Returns the updated record,
+        // or null if there is nothing to pay (not returned, no fine, or already paid).
+        BorrowRecord? PayFine(Guid borrowRecordId, string paymentMethod);
+
         // Branches (multi-branch support)
         IEnumerable<Branch> GetAllBranches();
         Branch? GetBranch(Guid id);
@@ -47,6 +52,9 @@ namespace Library_System_Management.Repositories
         // Notifications (simulated email/SMS)
         IEnumerable<Notification> GetAllNotifications();
         void AddNotification(Notification n);
+        // Scans active loans and creates "due soon" and "fine accruing" notifications.
+        // Returns the number of new notifications created (duplicates are skipped).
+        int GenerateDueDateNotifications(DateTime utcNow);
 
         // Simple CSV import summary
         (int success, int failed) ImportItemsFromCsv(string csv);

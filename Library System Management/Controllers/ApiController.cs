@@ -27,7 +27,7 @@ namespace Library_System_Management.Controllers
             return string.Equals(provided.FirstOrDefault(), expected, StringComparison.Ordinal);
         }
 
-        // GET: api/Api/available
+        // GET: api/Api/available (requires API key)
         [HttpGet("available")]
         public IActionResult GetAvailable()
         {
@@ -42,7 +42,7 @@ namespace Library_System_Management.Controllers
             return Ok(items);
         }
 
-        // GET: api/Api/categories
+        // GET: api/Api/categories (requires API key)
         [HttpGet("categories")]
         public IActionResult GetCategories()
         {
@@ -51,11 +51,13 @@ namespace Library_System_Management.Controllers
             return Ok(new { types });
         }
 
-        // GET: api/Api/status
+        // GET: api/Api/status (public)
+        // Operating status is not sensitive, so this endpoint needs no API key. This also lets the
+        // "API Status" link in the site navigation open it directly in a browser, which cannot send
+        // the X-Api-Key header. Catalogue data endpoints above remain key-protected.
         [HttpGet("status")]
         public IActionResult GetStatus()
         {
-            if (!IsAuthorized()) return Unauthorized();
             // simple operating hours: 09:00 - 17:00 local time
             var now = DateTime.Now;
             var open = now.Hour >= 9 && now.Hour < 17;

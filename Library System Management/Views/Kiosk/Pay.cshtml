@@ -1,0 +1,82 @@
+﻿@model Library_System_Management.Models.KioskPaymentViewModel
+@{
+    Layout = "_KioskLayout";
+    ViewData["Title"] = "Pay Fine";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <h3 class="mb-1">Pay a fine</h3>
+            <p class="text-muted">@Model.BorrowerName</p>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-semibold">@Model.ItemName <small class="text-muted">(@Model.Code)</small></div>
+                        <div class="small text-muted">Late return on @Model.ReturnedAt?.ToLocalTime().ToString("d")</div>
+                    </div>
+                    <div class="fs-3 fw-semibold">@Model.Amount.ToString("C")</div>
+                </div>
+            </div>
+
+            @if (Model.Error != null)
+            {
+                <div class="alert alert-danger">@Model.Error</div>
+            }
+
+            <form asp-controller="Kiosk" asp-action="Pay" method="post" autocomplete="off">
+                <input type="hidden" name="borrowerId" value="@Model.BorrowerId" />
+                <input type="hidden" name="recordId" value="@Model.RecordId" />
+
+                <div class="mb-3">
+                    <label class="form-label" for="cardName">Name on card</label>
+                    <input id="cardName" name="cardName" value="@Model.CardName" class="form-control form-control-lg" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="cardNumber">Card number</label>
+                    <input id="cardNumber" name="cardNumber" class="form-control form-control-lg" inputmode="numeric"
+                           placeholder="1234 5678 9012 3456" maxlength="19" required />
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label" for="expiry">Expiry (MM/YY)</label>
+                        <input id="expiry" name="expiry" class="form-control form-control-lg" placeholder="MM/YY" maxlength="7" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="cvv">Security code</label>
+                        <input id="cvv" name="cvv" type="password" class="form-control form-control-lg" inputmode="numeric" maxlength="3" required />
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success btn-lg">Pay @Model.Amount.ToString("C")</button>
+                    <a class="btn btn-outline-secondary btn-lg" asp-controller="Kiosk" asp-action="Account" asp-route-id="@Model.BorrowerId">Cancel</a>
+                </div>
+            </form>
+
+            <p class="small text-muted mt-3 mb-0">
+                Demonstration only: no real payment is processed and card numbers are never stored.
+                Test card: 4242 4242 4242 4242, any future expiry date, any 3-digit code.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Return to the kiosk start screen after 90 seconds of inactivity.
+    (function () {
+        var timeoutMs = 90000;
+        var timer;
+        function reset() {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                window.location.href = '@Url.Action("Index", "Kiosk")';
+            }, timeoutMs);
+        }
+        ['click', 'keydown', 'touchstart', 'mousemove'].forEach(function (evt) {
+            document.addEventListener(evt, reset, { passive: true });
+        });
+        reset();
+    })();
+</script>
