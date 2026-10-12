@@ -179,4 +179,35 @@ Time log (8–9 October 2026; testing included in each task)
 
 ---
 
+## Jet's changes
+
+UI improvements and features
+
+1. Homepage slideshow: Added a slideshow with multiple images, working next and back controls, and clickable navigation dots that allow users to jump directly to a specific image.
+2. Footer layout: Adjusted the page layout to keep the footer at the bottom of the page, providing a cleaner and more consistent appearance.
+3. Item descriptions and sample data: Added descriptions for items and replaced generic sample item names with more specific and creative names across different item types, making the catalogue more interesting to browse.
+4. User role management: Activated the previously non-working Assign Role button. Admins can manage employee roles by entering an email address and selecting a role from a dropdown list (Admin, Manager or Reception). Tested assigning and removing roles.
+
+
+Manual testing and verification
+
+Tested the application's main features across different user roles, checking that buttons, links, filters and workflows behaved as expected.
+1. Public user: Tested homepage access, catalogue browsing, item details and kiosk borrowing. Verified that public users cannot access the Admin, Reception or Manager pages.
+2. Item catalogue: Tested the available filter dropdown options, item Details buttons and Clear button to verify that filters can be applied and reset.
+3. Admin: Tested login and role-based access, item CRUD operations (create, read, update and delete), and verified that newly created items appear in the public catalogue. Also tested user role assignment and removal, CSV import, branch features and notifications.
+4. Reception: Tested borrower details and borrow records after checkout, new borrow operations and the return workflow. Verified that returned items no longer appear in the active borrower list. Also tested notifications and transferring items between branches.
+5. Manager: Tested CSV import and export, quick-access actions for notifications, item transfers and CSV operations. Verified that the borrowing statistics, fine revenue audit, inventory health, and item and borrow count reports could be downloaded as CSV files and reflected the latest recorded system activities.
+6. API verification: Used Windows PowerShell to test the API status, available items and item categories endpoints. Checked the responses from GET /api/status, GET /api/available and GET /api/categories to verify API connectivity and endpoint behaviour.
+
+
+Verification notes
+
+1.Checked navigation and access restrictions for the public, admin, reception and manager areas.
+2. Tested the main user interactions and data updates across the catalogue, borrowing and management workflows.
+3. Verified that the API endpoints responded to requests made through Windows PowerShell.
+
+Testing focused on the existing implemented features and their behaviour through the application's user interface and API endpoints.
+
+---
+
 *** End of log
