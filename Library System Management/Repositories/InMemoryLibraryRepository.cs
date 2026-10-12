@@ -50,17 +50,28 @@ namespace Library_System_Management.Repositories
                 new Book{LibraryCode="B014", Name="The Hobbit", Author="J.R.R. Tolkien", Genre="Fantasy", Pages=310},
                 new Book{LibraryCode="B015", Name="The Catcher in the Rye", Author="J.D. Salinger", Genre="Fiction", Pages=214}
             };
-            // generate additional books until we have 30
-            for (int i = books.Count + 1; i <= 30; i++)
+            books.AddRange(new[]
             {
-                books.Add(new Book
-                {
-                    LibraryCode = $"B{i:000}",
-                    Name = $"Sample Book {i}",
-                    Author = $"Author {i}",
-                    Genre = "General",
-                    Pages = 100 + i
-                });
+                new Book{LibraryCode="B016", Name="Jane Eyre", Author="Charlotte Brontë", Genre="Gothic", Pages=500},
+                new Book{LibraryCode="B017", Name="The Lord of the Rings", Author="J.R.R. Tolkien", Genre="Fantasy", Pages=1178},
+                new Book{LibraryCode="B018", Name="Brave New World", Author="Aldous Huxley", Genre="Dystopian", Pages=311},
+                new Book{LibraryCode="B019", Name="The Alchemist", Author="Paulo Coelho", Genre="Fiction", Pages=208},
+                new Book{LibraryCode="B020", Name="The Little Prince", Author="Antoine de Saint-Exupéry", Genre="Children's", Pages=96},
+                new Book{LibraryCode="B021", Name="The Kite Runner", Author="Khaled Hosseini", Genre="Fiction", Pages=371},
+                new Book{LibraryCode="B022", Name="Harry Potter and the Sorcerer's Stone", Author="J.K. Rowling", Genre="Fantasy", Pages=309},
+                new Book{LibraryCode="B023", Name="The Hunger Games", Author="Suzanne Collins", Genre="Dystopian", Pages=374},
+                new Book{LibraryCode="B024", Name="The Da Vinci Code", Author="Dan Brown", Genre="Thriller", Pages=689},
+                new Book{LibraryCode="B025", Name="The Girl with the Dragon Tattoo", Author="Stieg Larsson", Genre="Crime", Pages=465},
+                new Book{LibraryCode="B026", Name="Atomic Habits", Author="James Clear", Genre="Self-Help", Pages=320},
+                new Book{LibraryCode="B027", Name="Thinking, Fast and Slow", Author="Daniel Kahneman", Genre="Psychology", Pages=499},
+                new Book{LibraryCode="B028", Name="Sapiens", Author="Yuval Noah Harari", Genre="History", Pages=498},
+                new Book{LibraryCode="B029", Name="The Name of the Wind", Author="Patrick Rothfuss", Genre="Fantasy", Pages=662},
+                new Book{LibraryCode="B030", Name="Fahrenheit 451", Author="Ray Bradbury", Genre="Dystopian", Pages=249}
+            });
+
+            foreach (var book in books)
+            {
+                book.Description = $"{book.Name} is a {book.Genre.ToLowerInvariant()} book by {book.Author}.";
             }
 
             var music = new List<Music> {
@@ -75,16 +86,33 @@ namespace Library_System_Management.Repositories
                 new Music{LibraryCode="M009", Name="Blue Train", Artist="John Coltrane", Year=1957, Format="Vinyl"},
                 new Music{LibraryCode="M010", Name="The Beatles (White Album)", Artist="The Beatles", Year=1968, Format="Vinyl"}
             };
-            for (int i = music.Count + 1; i <= 30; i++)
+            music.AddRange(new[]
             {
-                music.Add(new Music
-                {
-                    LibraryCode = $"M{i:000}",
-                    Name = $"Sample Album {i}",
-                    Artist = $"Artist {i}",
-                    Year = 2000 + (i % 23),
-                    Format = (i % 3) == 0 ? "Digital" : ((i % 2) == 0 ? "CD" : "Vinyl")
-                });
+                new Music{LibraryCode="M011", Name="The Dark Side of the Moon", Artist="Pink Floyd", Year=1973, Format="Vinyl"},
+                new Music{LibraryCode="M012", Name="Sgt. Pepper's Lonely Hearts Club Band", Artist="The Beatles", Year=1967, Format="Vinyl"},
+                new Music{LibraryCode="M013", Name="Back to Black", Artist="Amy Winehouse", Year=2006, Format="CD"},
+                new Music{LibraryCode="M014", Name="Nevermind", Artist="Nirvana", Year=1991, Format="CD"},
+                new Music{LibraryCode="M015", Name="Born to Run", Artist="Bruce Springsteen", Year=1975, Format="Vinyl"},
+                new Music{LibraryCode="M016", Name="Purple Rain", Artist="Prince", Year=1984, Format="Vinyl"},
+                new Music{LibraryCode="M017", Name="Born in the U.S.A.", Artist="Bruce Springsteen", Year=1984, Format="CD"},
+                new Music{LibraryCode="M018", Name="The Miseducation of Lauryn Hill", Artist="Lauryn Hill", Year=1998, Format="CD"},
+                new Music{LibraryCode="M019", Name="Led Zeppelin IV", Artist="Led Zeppelin", Year=1971, Format="Vinyl"},
+                new Music{LibraryCode="M020", Name="1989", Artist="Taylor Swift", Year=2014, Format="Digital"},
+                new Music{LibraryCode="M021", Name="Random Access Memories", Artist="Daft Punk", Year=2013, Format="Digital"},
+                new Music{LibraryCode="M022", Name="OK Computer", Artist="Radiohead", Year=1997, Format="CD"},
+                new Music{LibraryCode="M023", Name="Lemonade", Artist="Beyoncé", Year=2016, Format="Digital"},
+                new Music{LibraryCode="M024", Name="The Rise and Fall of Ziggy Stardust and the Spiders from Mars", Artist="David Bowie", Year=1972, Format="Vinyl"},
+                new Music{LibraryCode="M025", Name="Appetite for Destruction", Artist="Guns N' Roses", Year=1987, Format="Vinyl"},
+                new Music{LibraryCode="M026", Name="Jagged Little Pill", Artist="Alanis Morissette", Year=1995, Format="CD"},
+                new Music{LibraryCode="M027", Name="A Love Supreme", Artist="John Coltrane", Year=1965, Format="Vinyl"},
+                new Music{LibraryCode="M028", Name="Discovery", Artist="Daft Punk", Year=2001, Format="Digital"},
+                new Music{LibraryCode="M029", Name="To Pimp a Butterfly", Artist="Kendrick Lamar", Year=2015, Format="Digital"},
+                new Music{LibraryCode="M030", Name="In Rainbows", Artist="Radiohead", Year=2007, Format="Digital"}
+            });
+
+            foreach (var album in music)
+            {
+                album.Description = $"{album.Name} is a {album.Format.ToLowerInvariant()} album by {album.Artist} released in {album.Year}.";
             }
 
             var toys = new List<Toy> {
@@ -99,15 +127,33 @@ namespace Library_System_Management.Repositories
                 new Toy{LibraryCode="T009", Name="Steam Kit", ToyType="Educational", RecommendedAge=10},
                 new Toy{LibraryCode="T010", Name="Chess Set", ToyType="Board Game", RecommendedAge=8}
             };
-            for (int i = toys.Count + 1; i <= 30; i++)
+            toys.AddRange(new[]
             {
-                toys.Add(new Toy
-                {
-                    LibraryCode = $"T{i:000}",
-                    Name = $"Sample Toy {i}",
-                    ToyType = (i % 4) == 0 ? "Educational" : ((i % 3) == 0 ? "Puzzle" : "Figure"),
-                    RecommendedAge = 3 + (i % 12)
-                });
+                new Toy{LibraryCode="T011", Name="LEGO City Police Set", ToyType="Building", RecommendedAge=6},
+                new Toy{LibraryCode="T012", Name="Hot Wheels Track Builder", ToyType="Vehicle", RecommendedAge=5},
+                new Toy{LibraryCode="T013", Name="Fisher-Price Little People Farm", ToyType="Pretend Play", RecommendedAge=2},
+                new Toy{LibraryCode="T014", Name="Nerf Elite Blaster", ToyType="Outdoor", RecommendedAge=8},
+                new Toy{LibraryCode="T015", Name="Wooden Train Set", ToyType="Building", RecommendedAge=3},
+                new Toy{LibraryCode="T016", Name="Play Kitchen Set", ToyType="Pretend Play", RecommendedAge=3},
+                new Toy{LibraryCode="T017", Name="STEM Robot Kit", ToyType="Educational", RecommendedAge=10},
+                new Toy{LibraryCode="T018", Name="Teddy Bear", ToyType="Plush", RecommendedAge=1},
+                new Toy{LibraryCode="T019", Name="Puzzle Ball", ToyType="Puzzle", RecommendedAge=4},
+                new Toy{LibraryCode="T020", Name="Dollhouse", ToyType="Dollhouse", RecommendedAge=5},
+                new Toy{LibraryCode="T021", Name="Remote Control Drone", ToyType="Electronic", RecommendedAge=12},
+                new Toy{LibraryCode="T022", Name="Building Blocks Set", ToyType="Building", RecommendedAge=2},
+                new Toy{LibraryCode="T023", Name="Science Experiment Kit", ToyType="Educational", RecommendedAge=8},
+                new Toy{LibraryCode="T024", Name="Puppet Theater", ToyType="Pretend Play", RecommendedAge=4},
+                new Toy{LibraryCode="T025", Name="Musical Xylophone", ToyType="Musical", RecommendedAge=2},
+                new Toy{LibraryCode="T026", Name="Shape Sorter", ToyType="Educational", RecommendedAge=1},
+                new Toy{LibraryCode="T027", Name="Play Tent", ToyType="Outdoor", RecommendedAge=3},
+                new Toy{LibraryCode="T028", Name="Coding Robot", ToyType="Educational", RecommendedAge=7},
+                new Toy{LibraryCode="T029", Name="Board Game Bundle", ToyType="Board Game", RecommendedAge=8},
+                new Toy{LibraryCode="T030", Name="Art Easel Set", ToyType="Creative", RecommendedAge=4}
+            });
+
+            foreach (var toy in toys)
+            {
+                toy.Description = $"{toy.Name} is a {toy.ToyType.ToLowerInvariant()} toy recommended for ages {toy.RecommendedAge}+.";
             }
 
             // add all items, spreading them evenly across the seeded branches
